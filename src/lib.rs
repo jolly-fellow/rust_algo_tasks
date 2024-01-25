@@ -61,6 +61,34 @@ pub fn leetcode_70_full(n: usize) -> usize {
     ways
 }
 
+// https://leetcode.com/problems/fibonacci-number/
+// 509. Fibonacci Number
+
+pub fn leetcode_509(n: i32) -> i32 {
+    if n < 2 {
+        return n;
+    }
+    let mut prev1 = 0;
+    let mut prev2 = 1;
+    let mut res = prev1 + prev2;
+
+    for _ in 2..=n {
+        res = prev1 + prev2;
+        prev1 = prev2;
+        prev2 = res;
+    }
+    res
+}
+
+// https://leetcode.com/problems/n-th-tribonacci-number
+// 1137. N-th Tribonacci Number
+pub fn leetcode_1137(n: i32) -> i32 {
+    if n == 0 { return 0; }
+    if n == 1 { return 1; }
+    if n == 2 { return 1; }
+    leetcode_1137(n-1) + leetcode_1137(n-2) + leetcode_1137(n-3)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -85,5 +113,27 @@ mod tests {
     #[test]
     fn test_leetcode_70_full() {
         assert_eq!(leetcode_70_full(20), 10946);
+    }
+
+    #[test]
+    fn test_leetcode_509() {
+        let result = leetcode_509(2);
+        assert_eq!(result, 1);
+        let result = leetcode_509(3);
+        assert_eq!(result, 2);
+        let result = leetcode_509(4);
+        assert_eq!(result, 3);
+        let result = leetcode_509(10);
+        assert_eq!(result, 55);
+    }
+
+    #[test]
+    fn test_leetcode_1137() {
+        let result = leetcode_1137(3);
+        assert_eq!(result, 2);
+        let result = leetcode_1137(4);
+        assert_eq!(result, 4);
+        let result = leetcode_1137(5);
+        assert_eq!(result, 7);
     }
 }
