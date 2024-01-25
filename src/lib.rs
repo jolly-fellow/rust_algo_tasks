@@ -81,12 +81,30 @@ pub fn leetcode_509(n: i32) -> i32 {
 }
 
 // https://leetcode.com/problems/n-th-tribonacci-number
-// 1137. N-th Tribonacci Number
+// 1137. N-th Tribonacci Number recursive solution
 pub fn leetcode_1137(n: i32) -> i32 {
     if n == 0 { return 0; }
     if n == 1 { return 1; }
     if n == 2 { return 1; }
     leetcode_1137(n-1) + leetcode_1137(n-2) + leetcode_1137(n-3)
+}
+// 1137. N-th Tribonacci Number iterative solution
+pub fn leetcode_1137_iterative(n: i32) -> i32 {
+    if n == 0 { return 0; }
+    if n == 1 { return 1; }
+    if n == 2 { return 1; }
+    let mut sum = 0;
+    let mut prev1 = 0;
+    let mut prev2 = 1;
+    let mut prev3 = 1;
+
+    for _ in 2..n {
+        sum = prev1 + prev2 + prev3;
+        prev1 = prev2;
+        prev2 = prev3;
+        prev3 = sum;
+    }
+    sum
 }
 
 #[cfg(test)]
@@ -126,7 +144,6 @@ mod tests {
         let result = leetcode_509(10);
         assert_eq!(result, 55);
     }
-
     #[test]
     fn test_leetcode_1137() {
         let result = leetcode_1137(3);
@@ -135,5 +152,17 @@ mod tests {
         assert_eq!(result, 4);
         let result = leetcode_1137(5);
         assert_eq!(result, 7);
+    }
+    #[test]
+    fn test_leetcode_1137_iterative() {
+        let result = leetcode_1137_iterative(3);
+        assert_eq!(result, 2);
+        let result = leetcode_1137_iterative(4);
+        assert_eq!(result, 4);
+        let result = leetcode_1137_iterative(5);
+        assert_eq!(result, 7);
+        let result = leetcode_1137_iterative(25);
+        assert_eq!(result, 1389537);
+
     }
 }
