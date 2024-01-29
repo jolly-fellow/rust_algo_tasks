@@ -1,3 +1,5 @@
+use std::cmp;
+
 /*
 https://leetcode.com/problems/calculate-money-in-leetcode-bank/description/
 */
@@ -107,10 +109,54 @@ pub fn leetcode_1137_iterative(n: i32) -> i32 {
     sum
 }
 
+// https://leetcode.com/problems/min-cost-climbing-stairs/
+// 746. Min Cost Climbing Stairs
+
+// recursive
+pub fn leetcode_746(cost: Vec<i32>) -> i32 {
+    fn r(cost: &Vec<i32>, i: isize) -> i32 {
+        match i {
+            i if i < 0 => 0,
+            i if i < 2 => cost[i as usize],
+            _ => cost[i as usize] + cmp::min(r(cost, i - 1), r(cost, i - 2)),
+        }
+    }
+    let n = cost.len()  as isize;
+    cmp::min(r(&cost, n - 1), r(&cost, n - 2))
+}
+
+pub fn leetcode_746_iterative(cost: Vec<i32>) -> i32 {
+    let mut prev = 0;
+    let mut prevprev = 0;
+    let mut current = 0;
+
+    for i in 2..=cost.len() {
+        current = cmp::min(cost[i - 1] + prev, cost[i - 2] + prevprev);
+        prevprev = prev;
+        prev = current;
+    }
+    current
+}
+
+// https://leetcode.com/problems/house-robber/
+// 198. House Robber
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[test]
+    fn test_leetcode_746() {
+        let result = leetcode_746_iterative(vec![10,15,20]);
+        assert_eq!(result, 15);
+        let result = leetcode_746(vec![10,15,20]);
+        assert_eq!(result, 15);
+        let result = leetcode_746(vec![1,100,1,1,1,100,1,1,100,1]);
+        assert_eq!(result, 6);
+        let result = leetcode_746_iterative(vec![1,100,1,1,1,100,1,1,100,1]);
+        assert_eq!(result, 6);
+    }
     #[test]
     fn test_leetcode_1716() {
         let result = leetcode_1716(4);
