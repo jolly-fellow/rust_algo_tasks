@@ -88,8 +88,9 @@ pub fn leetcode_1137(n: i32) -> i32 {
     if n == 0 { return 0; }
     if n == 1 { return 1; }
     if n == 2 { return 1; }
-    leetcode_1137(n-1) + leetcode_1137(n-2) + leetcode_1137(n-3)
+    leetcode_1137(n - 1) + leetcode_1137(n - 2) + leetcode_1137(n - 3)
 }
+
 // 1137. N-th Tribonacci Number iterative solution
 pub fn leetcode_1137_iterative(n: i32) -> i32 {
     if n == 0 { return 0; }
@@ -121,7 +122,7 @@ pub fn leetcode_746(cost: Vec<i32>) -> i32 {
             _ => cost[i as usize] + cmp::min(r(cost, i - 1), r(cost, i - 2)),
         }
     }
-    let n = cost.len()  as isize;
+    let n = cost.len() as isize;
     cmp::min(r(&cost, n - 1), r(&cost, n - 2))
 }
 
@@ -140,23 +141,121 @@ pub fn leetcode_746_iterative(cost: Vec<i32>) -> i32 {
 
 // https://leetcode.com/problems/house-robber/
 // 198. House Robber
+//    C++ recursive style
+pub fn leetcode_198(nums: Vec<i32>) -> i32 {
+    fn r(nums: &Vec<i32>, i: isize) -> i32 {
+        if i < 0 {
+            0
+        } else if i == 0 {
+            nums[i as usize]
+        } else if i == 1 {
+            cmp::max(nums[i as usize], nums[i as usize - 1])
+        } else {
+            cmp::max(r(nums, i - 1), r(nums, i - 2) + nums[i as usize])
+        }
+    }
+    r(&nums, nums.len() as isize - 1)
+}
 
+// Rust recursive style
+pub fn leetcode_198_recursive(nums: Vec<i32>) -> i32 {
+    fn r(nums: &Vec<i32>, i: isize) -> i32 {
+        match i {
+            i if i < 0 => 0,
+            0 => nums[0],
+            1 => cmp::max(nums[0], nums[1]),
+            _ => cmp::max(r(nums, i - 1), r(nums, i - 2) + nums[i as usize]),
+        }
+    }
+    r(&nums, nums.len() as isize - 1)
+}
+
+// Iterative C++ style
+pub fn leetcode_198_iterative_cpp(v: &Vec<i32>) -> i32 {
+    let v_size = v.len();
+
+    if v_size == 1 {
+        return v[0];
+    }
+    let mut prev2 = v[0];
+    let mut prev1 = cmp::max(v[0], v[1]);
+    let mut sum = prev1;
+
+    for i in 2..v_size {
+        sum = cmp::max(v[i] + prev2, prev1);
+
+        prev2 = prev1;
+        prev1 = sum;
+    }
+    sum
+}
+
+// Iterative Rust functional style
+pub fn leetcode_198_iterative_rust(v: &Vec<i32>) -> i32 {
+    // Base case: If there's only one house, return its value
+    if v.len() == 1 { return v[0]; }
+    // Initialize variables to keep track of the previous two results and the current sum
+    let (prev2, prev1, _) = v.iter().skip(2).fold(
+        // Initial tuple values (prev2, prev1, _)
+        (v[0], cmp::max(v[0], v[1]), 0),
+
+        // Fold function to update the tuple values in each iteration
+        |(prev2, prev1, _), &current| {
+            // Calculate the current sum
+            let sum = cmp::max(current + prev2, prev1);
+            // Update the tuple values for the next iteration
+            (prev1, sum, current)
+        },
+    );
+    // Return the maximum amount between the last two results
+    cmp::max(prev1, prev2)
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
+    fn test_leetcode_198() {
+        let long_vec = vec![114, 117, 207, 117, 235, 82, 90, 67, 143, 146, 53, 108,
+                            200, 91, 80, 223, 58, 170, 110, 236, 81, 90, 222, 160, 165, 195, 187,
+                            199, 114, 235, 197, 187, 69, 129, 64, 214, 228, 78, 188, 67, 205, 94,
+                            205, 169, 241, 202, 144, 240];
+        let long_vec_result = 4173;
+        let result = leetcode_198(vec![1, 2, 3, 1]);
+        assert_eq!(result, 4);
+        let result = leetcode_198(vec![2, 7, 9, 3, 1]);
+        assert_eq!(result, 12);
+        let result = leetcode_198_recursive(vec![1, 2, 3, 1]);
+        assert_eq!(result, 4);
+        let result = leetcode_198_recursive(vec![2, 7, 9, 3, 1]);
+        assert_eq!(result, 12);
+        let result = leetcode_198_iterative_cpp(&vec![1, 2, 3, 1]);
+        assert_eq!(result, 4);
+        let result = leetcode_198_iterative_cpp(&vec![2, 7, 9, 3, 1]);
+        assert_eq!(result, 12);
+        let result = leetcode_198_iterative_cpp(&long_vec);
+        assert_eq!(result, long_vec_result);
+        let result = leetcode_198_iterative_rust(&vec![1, 2, 3, 1]);
+        assert_eq!(result, 4);
+        let result = leetcode_198_iterative_rust(&vec![2, 7, 9, 3, 1]);
+        assert_eq!(result, 12);
+        let result = leetcode_198_iterative_rust(&long_vec);
+        assert_eq!(result, long_vec_result);
+    }
+
+    #[test]
     fn test_leetcode_746() {
-        let result = leetcode_746_iterative(vec![10,15,20]);
+        let result = leetcode_746_iterative(vec![10, 15, 20]);
         assert_eq!(result, 15);
-        let result = leetcode_746(vec![10,15,20]);
+        let result = leetcode_746(vec![10, 15, 20]);
         assert_eq!(result, 15);
-        let result = leetcode_746(vec![1,100,1,1,1,100,1,1,100,1]);
+        let result = leetcode_746(vec![1, 100, 1, 1, 1, 100, 1, 1, 100, 1]);
         assert_eq!(result, 6);
-        let result = leetcode_746_iterative(vec![1,100,1,1,1,100,1,1,100,1]);
+        let result = leetcode_746_iterative(vec![1, 100, 1, 1, 1, 100, 1, 1, 100, 1]);
         assert_eq!(result, 6);
     }
+
     #[test]
     fn test_leetcode_1716() {
         let result = leetcode_1716(4);
@@ -166,14 +265,17 @@ mod tests {
         let result = leetcode_1716(20);
         assert_eq!(result, 96);
     }
+
     #[test]
     fn test_leetcode_70() {
         assert_eq!(leetcode_70(20), 10946);
     }
+
     #[test]
     fn test_leetcode_70_array() {
         assert_eq!(leetcode_70_array(20), 10946);
     }
+
     #[test]
     fn test_leetcode_70_full() {
         assert_eq!(leetcode_70_full(20), 10946);
@@ -190,6 +292,7 @@ mod tests {
         let result = leetcode_509(10);
         assert_eq!(result, 55);
     }
+
     #[test]
     fn test_leetcode_1137() {
         let result = leetcode_1137(3);
@@ -199,6 +302,7 @@ mod tests {
         let result = leetcode_1137(5);
         assert_eq!(result, 7);
     }
+
     #[test]
     fn test_leetcode_1137_iterative() {
         let result = leetcode_1137_iterative(3);
@@ -209,6 +313,5 @@ mod tests {
         assert_eq!(result, 7);
         let result = leetcode_1137_iterative(25);
         assert_eq!(result, 1389537);
-
     }
 }
