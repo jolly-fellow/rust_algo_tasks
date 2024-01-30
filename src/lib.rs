@@ -1,4 +1,5 @@
 use std::cmp;
+use std::cmp::max;
 
 /*
 https://leetcode.com/problems/calculate-money-in-leetcode-bank/description/
@@ -211,9 +212,98 @@ pub fn leetcode_198_iterative_rust(v: &Vec<i32>) -> i32 {
     cmp::max(prev1, prev2)
 }
 
+// https://leetcode.com/problems/delete-and-earn
+// 740. Delete and Earn
+
+// recursive style
+pub fn leetcode_740(v: Vec<i32>) -> i32 {
+    if v.len() == 1 {
+        return v[0];
+    }
+
+    let me = *v.iter().max().unwrap();
+    let mut n = vec![0; (me + 1) as usize];
+
+    v.iter().for_each(|&i| n[i as usize] += i);
+
+    fn r(nums: &Vec<i32>, i: isize) -> i32 {
+        match i {
+            i if i < 0 => 0,
+            0 => nums[0],
+            1 => max(nums[0], nums[1]),
+            _ => max(r(nums, i - 1), r(nums, i - 2) + nums[i as usize]),
+        }
+    }
+    r(&n, n.len() as isize - 1)
+}
+
+
+// C++ iterative style
+
+pub fn leetcode_740_iterative_cpp(v: Vec<i32>) -> i32 {
+    if v.len() == 1 {
+        return v[0];
+    }
+
+    let me = *v.iter().max().unwrap();
+    let mut n = vec![0; (me + 1) as usize];
+
+    for &i in &v {
+        n[i as usize] += i;
+    }
+
+    let mut prev2 = n[0];
+    let mut prev1 = n[1];
+    let mut sum = 0;
+
+    for it in 2..n.len() {
+        sum = max(n[it] + prev2, prev1);
+        prev2 = prev1;
+        prev1 = sum;
+    }
+    sum
+}
+
+// Functional iterative style
+pub fn leetcode_740_iterative_rust(v: Vec<i32>) -> i32 {
+    if v.len() == 1 {
+        return v[0];
+    }
+
+    let me = *v.iter().max().unwrap();
+    let mut n = vec![0; (me + 1) as usize];
+
+    v.iter().for_each(|&i| n[i as usize] += i);
+
+    let sum = n.iter().skip(2).fold(
+        (n[0], n[1]), |(prev2, prev1), &current| {
+        (prev1, max(current + prev2, prev1))
+    }).1;
+
+    sum
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_leetcode_740() {
+        let result = leetcode_740(vec![3,4,2]);
+        assert_eq!(result, 6);
+        let result = leetcode_740(vec![2,2,3,3,3,4]);
+        assert_eq!(result, 9);
+        let result = leetcode_740_iterative_cpp(vec![3,4,2]);
+        assert_eq!(result, 6);
+        let result = leetcode_740_iterative_cpp(vec![2,2,3,3,3,4]);
+        assert_eq!(result, 9);
+        let result = leetcode_740_iterative_rust(vec![3,4,2]);
+        assert_eq!(result, 6);
+        let result = leetcode_740_iterative_rust(vec![2,2,3,3,3,4]);
+        assert_eq!(result, 9);
+
+    }
 
     #[test]
     fn test_leetcode_198() {
