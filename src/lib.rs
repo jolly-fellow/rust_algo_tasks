@@ -283,10 +283,35 @@ pub fn leetcode_740_iterative_rust(v: Vec<i32>) -> i32 {
     sum
 }
 
+// https://leetcode.com/problems/unique-paths
+// 62. Unique Paths
+pub fn leetcode_62(m: i32, n: i32) -> i32 {
+    let mut dp = vec![vec![0; n as usize]; m as usize];
+
+    for r in 0..m as usize {
+        for c in 0..n as usize {
+            if r == 0 || c == 0 {
+                dp[r][c] = 1;
+            } else {
+                dp[r][c] = dp[r - 1][c] + dp[r][c - 1];
+            }
+        }
+    }
+    dp[m as usize - 1][n as usize - 1]
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_leetcode_62() {
+        let result = leetcode_62(3,7);
+        assert_eq!(result, 28);
+        let result = leetcode_62(3,2);
+        assert_eq!(result, 3);
+    }
 
     #[test]
     fn test_leetcode_740() {
