@@ -1,5 +1,6 @@
 use std::cmp;
 use std::cmp::max;
+use std::cmp::min;
 
 /*
 https://leetcode.com/problems/calculate-money-in-leetcode-bank/description/
@@ -300,16 +301,118 @@ pub fn leetcode_62(m: i32, n: i32) -> i32 {
     dp[m as usize - 1][n as usize - 1]
 }
 
+pub fn leetcode_62_recursive(m: i32, n: i32) -> i32 {
+    if m == 1 || n == 1 {
+        1
+    } else {
+        leetcode_62_recursive(m - 1, n) + leetcode_62_recursive(m, n - 1)
+    }
+}
+
+// https://leetcode.com/problems/minimum-path-sum
+// 64. Minimum Path Sum
+pub fn leetcode_64(grid: Vec<Vec<i32>>) -> i32 {
+    fn r(g: &Vec<Vec<i32>>, row: usize, col: usize) -> i32 {
+        if row == 0 && col == 0 {
+            g[0][0]
+        } else if row == 0 {
+            g[row][col] + r(g, row, col - 1)
+        } else if col == 0 {
+            g[row][col] + r(g, row - 1, col)
+        } else {
+            g[row][col] + min(
+                r(g, row - 1, col),
+                r(g, row, col - 1),
+            )
+        }
+    }
+    r(&grid, grid.len()-1, grid[0].len()-1)
+}
+
+pub fn leetcode_64_iterative(grid: Vec<Vec<i32>>) -> i32 {
+    let rows = grid.len();
+    let cols = grid[0].len();
+
+    let mut dp = vec![i32::MAX; cols + 1];
+    dp[1] = 0;
+
+    for row in 1..=rows {
+        for col in 1..=cols {
+            dp[col] = grid[row - 1][col - 1] + dp[col].min(dp[col - 1]);
+        }
+    }
+    dp[cols]
+}
+
+// https://leetcode.com/problems/triangle/
+// 120. Triangle
+
+pub fn leetcode_120(triangle: Vec<Vec<i32>>) -> i32 {
+    let n = triangle.len();
+    let mut minlen = triangle.last().unwrap().clone();
+
+    for layer in (0..n - 1).rev() {
+        for i in 0..=layer {
+            // Find the lesser of its two children, and sum the current value in the triangle with it.
+            minlen[i] = minlen[i].min(minlen[i + 1]) + triangle[layer][i];
+        }
+    }
+    minlen[0]
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
+    fn test_leetcode_120() {
+        let result = leetcode_120(vec![vec![2],vec![3,4],vec![6,5,7],vec![4,1,8,3]]);
+        assert_eq!(result, 11);
+        let result = leetcode_120(vec![vec![-10]]);
+        assert_eq!(result, -10);
+    }
+    #[test]
+    fn test_leetcode_64() {
+        let big_grid =  vec![vec![3,8,6,0,5,9,9,6,3,4,0,5,7,3,9,3],
+                             vec![0,9,2,5,5,4,9,1,4,6,9,5,6,7,3,2],
+                             vec![8,2,2,3,3,3,1,6,9,1,1,6,6,2,1,9],
+                             vec![1,3,6,9,9,5,0,3,4,9,1,0,9,6,2,7],
+                             vec![8,6,2,2,1,3,0,0,7,2,7,5,4,8,4,8],
+                             vec![4,1,9,5,8,9,9,2,0,2,5,1,8,7,0,9],
+                             vec![6,2,1,7,8,1,8,5,5,7,0,2,5,7,2,1],
+                             vec![8,1,7,6,2,8,1,2,2,6,4,0,5,4,1,3],
+                             vec![9,2,1,7,6,1,4,3,8,6,5,5,3,9,7,3],
+                             vec![0,6,0,2,4,3,7,6,1,3,8,6,9,0,0,8],
+                             vec![4,3,7,2,4,3,6,4,0,3,9,5,3,6,9,3],
+                             vec![2,1,8,8,4,5,6,5,8,7,3,7,7,5,8,3],
+                             vec![0,7,6,6,1,2,0,3,5,0,8,0,8,7,4,3],
+                             vec![0,4,3,4,9,0,1,9,7,7,8,6,4,6,9,5],
+                             vec![6,5,1,9,9,2,2,7,4,2,7,2,2,3,7,2],
+                             vec![7,1,9,6,1,2,7,0,9,6,6,4,4,5,1,0],
+                             vec![3,4,9,2,8,3,1,2,6,9,7,0,2,4,2,0],
+                             vec![5,1,8,8,4,6,8,5,2,4,1,6,2,2,9,7]];
+        let big_grid_result = 83;
+        let result = leetcode_64(vec![vec![1,3,1],vec![1,5,1],vec![4,2,1]]);
+        assert_eq!(result, 7);
+        let result = leetcode_64(vec![vec![1,2,3],vec![4,5,6]]);
+        assert_eq!(result, 12);
+        let result = leetcode_64_iterative(vec![vec![1,3,1],vec![1,5,1],vec![4,2,1]]);
+        assert_eq!(result, 7);
+        let result = leetcode_64_iterative(vec![vec![1,2,3],vec![4,5,6]]);
+        assert_eq!(result, 12);
+        let result = leetcode_64_iterative(big_grid);
+        assert_eq!(result, big_grid_result);
+    }
+
+    #[test]
     fn test_leetcode_62() {
         let result = leetcode_62(3,7);
         assert_eq!(result, 28);
         let result = leetcode_62(3,2);
+        assert_eq!(result, 3);
+        let result = leetcode_62_recursive(3,7);
+        assert_eq!(result, 28);
+        let result = leetcode_62_recursive(3,2);
         assert_eq!(result, 3);
     }
 
