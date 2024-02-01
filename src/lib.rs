@@ -183,8 +183,8 @@ pub fn leetcode_198_iterative_cpp(v: &Vec<i32>) -> i32 {
     let mut prev1 = cmp::max(v[0], v[1]);
     let mut sum = prev1;
 
-    for i in 2..v_size {
-        sum = cmp::max(v[i] + prev2, prev1);
+    for i in v.iter().skip(2) {
+        sum = cmp::max(i + prev2, prev1);
 
         prev2 = prev1;
         prev1 = sum;
@@ -257,8 +257,8 @@ pub fn leetcode_740_iterative_cpp(v: Vec<i32>) -> i32 {
     let mut prev1 = n[1];
     let mut sum = 0;
 
-    for it in 2..n.len() {
-        sum = max(n[it] + prev2, prev1);
+    for &element in n.iter().skip(2) {
+        sum = max(element + prev2, prev1);
         prev2 = prev1;
         prev1 = sum;
     }
@@ -308,6 +308,8 @@ pub fn leetcode_62_recursive(m: i32, n: i32) -> i32 {
         leetcode_62_recursive(m - 1, n) + leetcode_62_recursive(m, n - 1)
     }
 }
+
+
 
 // https://leetcode.com/problems/minimum-path-sum
 // 64. Minimum Path Sum
@@ -360,10 +362,125 @@ pub fn leetcode_120(triangle: Vec<Vec<i32>>) -> i32 {
     minlen[0]
 }
 
+// https://leetcode.com/problems/unique-paths-ii/description/
+// 63. Unique Paths II
+pub fn leetcode_63(grid: Vec<Vec<i32>>) -> i32 {
+    fn r(m: i32, n: i32, g: & Vec<Vec<i32>>) -> i32 {
+        if m > g.len() as i32-1 || n > g[0].len() as i32-1 || m < 0 || n < 0 || g[m as usize][n as usize] == 1 {
+            0
+        }
+        else if m == g.len() as i32-1 && n == g[0].len() as i32-1 {
+            1
+        }
+        else {
+            r(m+1, n, g) + r(m, n+1, g)
+        }
+    }
+    r(0, 0, &grid)
+}
+
+pub fn leetcode_63_memo(grid: &Vec<Vec<i32>>) -> i32 {
+    let mut dp = vec![vec![0; grid[0].len()]; grid.len()];
+
+    fn r(g: &Vec<Vec<i32>>, dp: &mut Vec<Vec<i32>>, i: usize, j: usize) -> i32 {
+        let m = g.len();
+        let n = g[0].len();
+
+        if i >= m || j >= n || i == usize::MAX || j == usize::MAX || g[i][j] == 1 {
+            return 0;
+        }
+        if i == m - 1 && j == n - 1 {
+            return 1;
+        }
+        if dp[i][j] != 0 {
+            return dp[i][j];
+        }
+        dp[i][j] = r(g, dp, i + 1, j) + r(g, dp, i, j + 1);
+        dp[i][j]
+    }
+    r(grid, &mut dp, 0, 0)
+}
+
+pub fn leetcode_63_iterative(grid: &Vec<Vec<i32>>) -> i32 {
+    let m = grid.len() + 1;
+    let n = grid[0].len() + 1;
+
+    let mut dp: Vec<Vec<i32>> = vec![vec![0; n]; m];
+
+    dp[0][1] = 1;
+
+    for i in 1..m {
+        for j in 1..n {
+            if grid[i - 1][j - 1] == 1 {
+                dp[i][j] = 0;
+            } else {
+                dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+            }
+        }
+    }
+
+    dp[m - 1][n - 1]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[test]
+    fn test_leetcode_63() {
+        let big_grid =  vec![vec![0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,0,0,1,0,0],
+                             vec![0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0],
+                             vec![1,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,0,1,0,0,0],
+                             vec![1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,0,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1],
+                             vec![0,0,0,1,0,0,0,0,0,0,0,1,1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
+                             vec![0,0,1,0,0,0,1,1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,1,0,0,1,0,0],
+                             vec![0,0,0,0,0,0,1,0,0,0,1,1,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0],
+                             vec![1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,1,1,0,0,0,1],
+                             vec![0,0,0,0,1,0,0,1,0,1,1,1,0,0,0,1,0,0,1,0,1,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0],
+                             vec![0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,1,0,1,0,0,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0],
+                             vec![1,0,1,0,1,1,0,1,0,1,0,0,1,0,0,0,0,0,1,0,0,0,0,1,1,1,0,0,0,0,1,0,0,0,1,0],
+                             vec![0,0,0,0,0,0,1,0,0,1,1,0,0,1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,1,0,0,1,0,0,0,1],
+                             vec![0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0],
+                             vec![1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                             vec![0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+                             vec![0,1,0,0,1,0,0,0,0,0,1,0,1,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0],
+                             vec![0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,1,1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0],
+                             vec![0,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+                             vec![0,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                             vec![0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+                             vec![0,0,0,1,0,1,0,0,1,0,0,0,0,0,1,1,1,0,1,1,1,0,0,1,0,1,0,1,1,1,0,0,0,0,0,0],
+                             vec![0,0,1,0,0,0,0,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+                             vec![0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
+                             vec![0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+                             vec![1,1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+                             vec![0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,1,0,0],
+                             vec![0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0],
+                             vec![0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]];
+        let big_grid_result = 718991952;
+        let result = leetcode_63(vec![vec![0,0,0],vec![0,1,0],vec![0,0,0]]);
+        assert_eq!(result, 2);
+        let result = leetcode_63(vec![vec![0,1],vec![0,0]]);
+        assert_eq!(result, 1);
+        let result = leetcode_63(vec![vec![0,0],vec![0,1]]);
+        assert_eq!(result, 0);
+        let result = leetcode_63_memo(&vec![vec![0,0,0],vec![0,1,0],vec![0,0,0]]);
+        assert_eq!(result, 2);
+        let result = leetcode_63_memo(&vec![vec![0,1],vec![0,0]]);
+        assert_eq!(result, 1);
+        let result = leetcode_63_memo(&vec![vec![0,0],vec![0,1]]);
+        assert_eq!(result, 0);
+        let result = leetcode_63_memo(&big_grid);
+        assert_eq!(result, big_grid_result);
+        let result = leetcode_63_iterative(&vec![vec![0,0,0],vec![0,1,0],vec![0,0,0]]);
+        assert_eq!(result, 2);
+        let result = leetcode_63_iterative(&vec![vec![0,1],vec![0,0]]);
+        assert_eq!(result, 1);
+        let result = leetcode_63_iterative(&vec![vec![0,0],vec![0,1]]);
+        assert_eq!(result, 0);
+        let result = leetcode_63_iterative(&big_grid);
+        assert_eq!(result, big_grid_result);
+
+    }
     #[test]
     fn test_leetcode_120() {
         let result = leetcode_120(vec![vec![2],vec![3,4],vec![6,5,7],vec![4,1,8,3]]);
