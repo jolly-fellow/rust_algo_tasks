@@ -422,9 +422,34 @@ pub fn leetcode_63_iterative(grid: &Vec<Vec<i32>>) -> i32 {
     dp[m - 1][n - 1]
 }
 
+// https://leetcode.com/problems/minimum-falling-path-sum/
+// 931. Minimum Falling Path Sum
+pub fn leetcode_931(mut grid: Vec<Vec<i32>>) -> i32 {
+    for i in 1..grid.len() {
+        for j in 0..grid[i].len() {
+            let neighbors = [
+                (i - 1, j),
+                (i - 1, j.saturating_sub(1)),
+                (i - 1, (j + 1).min(grid[i].len() - 1)),
+            ];
+            grid[i][j] += neighbors.iter().map(|&(r, c)| grid[r][c]).min().unwrap();
+        }
+    }
+    *grid.last().unwrap().iter().min().unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_leetcode_931() {
+        let result = leetcode_931(vec![vec![2,1,3],vec![6,5,4],vec![7,8,9]]);
+        assert_eq!(result, 13);
+        let result = leetcode_931(vec![vec![-19,57],vec![-40,-5]]);
+        assert_eq!(result, -59);
+
+    }
 
     #[test]
     fn test_leetcode_63() {
