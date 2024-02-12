@@ -457,9 +457,105 @@ pub fn leetcode_931(mut grid: Vec<Vec<i32>>) -> i32 {
     *grid.last().unwrap().iter().min().unwrap()
 }
 
+// https://leetcode.com/problems/maximal-square/
+// 221. Maximal Square
+pub fn leetcode_221(matrix: & Vec<Vec<char>>) -> i32 {
+    let rows = matrix.len();
+    let cols = matrix[0].len();
+
+    let mut dp = vec![vec![0; cols + 1]; rows + 1];
+    let mut max_side = 0;
+
+    for r in 0..rows {
+        for c in 0..cols {
+            if matrix[r][c] == '1' {
+                dp[r+1][c+1] = dp[r][c].min(dp[r+1][c]).min(dp[r][c+1]) + 1;
+                max_side = max_side.max(dp[r+1][c+1]);
+            }
+        }
+    }
+    max_side * max_side
+}
+
+
+// optimized solution by memory size using a vector for dp instead of matrix because
+// we don't need to keep processed lines of the given matrix.
+
+pub fn leetcode_221_vector(matrix: & Vec<Vec<char>>) -> i32 {
+    let rows = matrix.len();
+    let cols = matrix[0].len();
+
+    let mut dp = vec![0; cols + 1];
+    let mut prev = 0;
+    let mut max_side = 0;
+
+    for r in 0..rows {
+        for c in 0..cols {
+            let temp = dp[c + 1];
+            if matrix[r][c] == '1' {
+                dp[c + 1] = dp[c].min(dp[c + 1]).min(prev) + 1;
+                max_side = max_side.max(dp[c + 1]);
+            } else {
+                dp[c + 1] = 0;
+            }
+            prev = temp;
+        }
+    }
+    max_side * max_side
+}
+
+// Another approach with iterators
+pub fn leetcode_221_vector_iter(matrix: & Vec<Vec<char>>) -> i32 {
+    let mut dp = vec![0; matrix[0].len() + 1];
+    let mut max_side = 0;
+
+    for row in matrix {
+        let mut prev = 0;
+        // Iterate over each cell in the row along with its index
+        for (col, &cell) in row.iter().enumerate() {
+            let temp = dp[col + 1];
+            if cell == '1' {
+                dp[col + 1] = dp[col].min(dp[col + 1]).min(prev) + 1;
+                max_side = max_side.max(dp[col + 1]);
+            } else {
+                dp[col + 1] = 0;
+            }
+            prev = temp;
+        }
+    }
+    max_side * max_side
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_leetcode_221() {
+        let grid = vec![vec!['1','0','1','0','0'],
+                          vec!['1','0','1','1','1'],
+                          vec!['1','1','1','1','1'],
+                          vec!['1','0','0','1','0']];
+
+        let result = leetcode_221(&grid);
+        assert_eq!(result, 4);
+        let result = leetcode_221(&vec![vec!['0','1'], vec!['1','0']]);
+        assert_eq!(result, 1);
+        let result = leetcode_221(&vec![vec!['0']]);
+        assert_eq!(result, 0);
+        let result = leetcode_221_vector(&grid);
+        assert_eq!(result, 4);
+        let result = leetcode_221_vector(&vec![vec!['0','1'], vec!['1','0']]);
+        assert_eq!(result, 1);
+        let result = leetcode_221_vector(&vec![vec!['0']]);
+        assert_eq!(result, 0);
+        let result = leetcode_221_vector_iter(&grid);
+        assert_eq!(result, 4);
+        let result = leetcode_221_vector_iter(&vec![vec!['0','1'], vec!['1','0']]);
+        assert_eq!(result, 1);
+        let result = leetcode_221_vector_iter(&vec![vec!['0']]);
+        assert_eq!(result, 0);
+    }
 
     #[test]
     fn test_leetcode_931() {
