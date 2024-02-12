@@ -424,15 +424,34 @@ pub fn leetcode_63_iterative(grid: &Vec<Vec<i32>>) -> i32 {
 
 // https://leetcode.com/problems/minimum-falling-path-sum/
 // 931. Minimum Falling Path Sum
+/*
+// less optimized but looking nice approach
 pub fn leetcode_931(mut grid: Vec<Vec<i32>>) -> i32 {
     for i in 1..grid.len() {
         for j in 0..grid[i].len() {
+            // Creates a list of valid neighbors for the current cell (i, j) i.e.
+            // 3 cells under cell (i, j),
+            // ensuring they stay within grid boundaries.
             let neighbors = [
                 (i - 1, j),
                 (i - 1, j.saturating_sub(1)),
                 (i - 1, (j + 1).min(grid[i].len() - 1)),
             ];
             grid[i][j] += neighbors.iter().map(|&(r, c)| grid[r][c]).min().unwrap();
+        }
+    }
+    *grid.last().unwrap().iter().min().unwrap()
+}*/
+
+pub fn leetcode_931(mut grid: Vec<Vec<i32>>) -> i32 {
+    let rows = grid.len();
+    let cols = grid[0].len();
+
+    for i in 1..rows {
+        for j in 0..cols {
+            grid[i][j] += min(grid[i - 1][j],
+                              min(grid[i - 1][j.saturating_sub(1)],
+                                  grid[i - 1][min(cols - 1, j + 1)]));
         }
     }
     *grid.last().unwrap().iter().min().unwrap()
@@ -448,7 +467,6 @@ mod tests {
         assert_eq!(result, 13);
         let result = leetcode_931(vec![vec![-19,57],vec![-40,-5]]);
         assert_eq!(result, -59);
-
     }
 
     #[test]
