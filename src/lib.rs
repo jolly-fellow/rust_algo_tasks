@@ -526,9 +526,179 @@ pub fn leetcode_221_vector_iter(matrix: & Vec<Vec<char>>) -> i32 {
     max_side * max_side
 }
 
+// https://leetcode.com/problems/longest-palindromic-substring/description/
+// 5. Longest Palindromic Substring
+
+// the simplest recursive solution
+pub fn leetcode_5(s: String) -> String {
+    fn longest_palindrome_substring(s: &str, i: usize, j: usize) -> &str {
+        fn is_palindrome(s: &str, i: usize, j: usize) -> bool {
+            if i > j {
+                return true; // Empty string is considered a palindrome
+            }
+            if s.chars().nth(i) != s.chars().nth(j) {
+                return false;
+            }
+            is_palindrome(s, i + 1, j - 1)
+        }
+
+        if i > j {
+            return "";
+        }
+        if i == j {
+            return &s[i..=i];
+        }
+        // Check if current substring is a palindrome
+        if is_palindrome(s, i, j) {
+            return &s[i..=j];
+        }
+        // Explore both possibilities: excluding first or last character
+        let left = longest_palindrome_substring(s, i + 1, j);
+        let right = longest_palindrome_substring(s, i, j - 1);
+
+        // Return the longest substring found
+        if left.len() >= right.len() {
+            left
+        } else {
+            right
+        }
+    }
+    longest_palindrome_substring(s.as_str(), 0, s.len() - 1).to_string()
+}
+
+// Manacher algorithm O(n)
+// https://en.wikipedia.org/wiki/Longest_palindromic_substring
+
+/*
+string longestPalindrome(const string &s){
+    vector<char> s2(s.size() * 2 + 1, '#');
+    //создаем псевдостроку с границами в виде символа '#'
+    for(int i = 0; i != s.size(); ++i){
+        s2[i*2 + 1] = s[i];
+    }
+
+    int p[s2.size()];
+    int r, c, index, i_mir;
+    int maxLen = 1;
+    i_mir = index = r = c = 0;
+
+    for(int i = 1; i != s2.size() - 1; ++i){
+        i_mir = 2*c-i;
+
+        //Если мы попадаем в пределы радиуса прошлого результата,
+        //то начальное значение текущего радиуса можно взять из зеркального результата
+        p[i] = r > i ? min(p[i_mir], r-i) : 0;
+
+        while(i > p[i] && (i + p[i] + 1) < s2.size() && s2[i - p[i] - 1] == s2[i + p[i] + 1])
+            ++p[i];
+
+        if(p[i] + i > r){
+            c = i;
+            r = i + p[i];
+        }
+        if(maxLen < p[i]){
+            maxLen = p[i];
+            index = i;
+        }
+    }
+    //Отображаем найденные позиции на оригинальную строку
+    return s.substr((index-maxLen)/2, maxLen);
+}
+ */
+pub fn leetcode_5_manacher(s: String) -> String {
+    if s.len() <= 1 { return s; }
+
+    // MEMO: We need to detect odd palindrome as well,
+    // therefore, inserting dummy string so that
+    // we can find a pair with dummy center character.
+    let mut chars: Vec<char> = Vec::with_capacity(s.len() * 2 + 1);
+    for c in s.chars() {
+        chars.push('#');
+        chars.push(c);
+    }
+    chars.push('#');
+
+    // List: storing the length of palindrome at each index of string
+    let mut length_of_palindrome = vec![1usize; chars.len()];
+    // Integer: Current checking palindrome's center index
+    let mut current_center: usize = 0;
+    // Integer: Right edge index existing the radius away from current center
+    let mut right_from_current_center: usize = 0;
+
+    for i in 0..chars.len() {
+        // 1: Check if we are looking at right side of palindrome.
+        if right_from_current_center > i && i > current_center {
+            // 1-1: If so copy from the left side of palindrome.
+            // If the value + index exceeds the right edge index, we should cut and check palindrome later #3.
+            length_of_palindrome[i] = std::cmp::min(
+                right_from_current_center - i,
+                length_of_palindrome[2 * current_center - i],
+            );
+            // 1-2: Move the checking palindrome to new index if it exceeds the right edge.
+            if length_of_palindrome[i] + i >= right_from_current_center {
+                current_center = i;
+                right_from_current_center = length_of_palindrome[i] + i;
+                // 1-3: If radius exceeds the end of list, it means checking is over.
+                // You will never get the larger value because the string will get only shorter.
+                if right_from_current_center >= chars.len() - 1 {
+                    break;
+                }
+            } else {
+                // 1-4: If the checking index doesn't exceeds the right edge,
+                // it means the length is just as same as the left side.
+                // You don't need to check anymore.
+                continue;
+            }
+        }
+
+        // Integer: Current radius from checking index
+        // If it's copied from left side and more than 1,
+        // it means it's ensured so you don't need to check inside radius.
+        let mut radius: usize = (length_of_palindrome[i] - 1) / 2;
+        radius += 1;
+        // 2: Checking palindrome.
+        // Need to care about overflow usize.
+        while i >= radius && i + radius <= chars.len() - 1 && chars[i - radius] == chars[i + radius]
+        {
+            length_of_palindrome[i] += 2;
+            radius += 1;
+        }
+    }
+
+    // 3: Find the maximum length and generate answer.
+    let center_of_max = length_of_palindrome
+        .iter()
+        .enumerate()
+        .max_by_key(|(_, &value)| value)
+        .map(|(idx, _)| idx)
+        .unwrap();
+    let radius_of_max = (length_of_palindrome[center_of_max] - 1) / 2;
+    let answer = &chars[(center_of_max - radius_of_max)..(center_of_max + radius_of_max + 1)]
+        .iter()
+        .collect::<String>();
+    answer.replace('#', "")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_leetcode_5() {
+        let result = leetcode_5("babad".to_string());
+        assert!(result == "bab" || result == "aba");
+        let result = leetcode_5("cbbd".to_string());
+        assert_eq!(result, "bb");
+        let result = leetcode_5("a".to_string());
+        assert_eq!(result, "a");
+
+        let result = leetcode_5_manacher("babad".to_string());
+        assert!(result == "bab" || result == "aba");
+        let result = leetcode_5_manacher("cbbd".to_string());
+        assert_eq!(result, "bb");
+        let result = leetcode_5_manacher("a".to_string());
+        assert_eq!(result, "a");
+    }
 
     #[test]
     fn test_leetcode_221() {
