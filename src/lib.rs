@@ -1,6 +1,8 @@
 use std::cmp;
 use std::cmp::max;
 use std::cmp::min;
+use std::collections::HashSet;
+
 
 /*
 https://leetcode.com/problems/calculate-money-in-leetcode-bank/description/
@@ -679,9 +681,78 @@ pub fn leetcode_5_manacher(s: String) -> String {
     answer.replace('#', "")
 }
 
+// https://leetcode.com/problems/word-break
+// 139. Word Break
+
+pub fn leetcode_139(s: String, word_dict: Vec<String>) -> bool {
+
+    // Convert dictionary words to a HashSet for efficient lookups
+    let word_set: HashSet<String> = word_dict.into_iter().collect();
+
+    // Find the longest word in the dictionary for boundary checks
+    let longest_word = word_set.iter().map(|word| word.len()).max().unwrap_or(0);
+
+    // Create a boolean array to track if substrings can be formed
+    let mut dp: Vec<bool> = vec![false; s.len() + 1];
+    // Base case: empty string can be formed
+    dp[0] = true;
+
+    // Iterate over all possible substring lengths (1 to max)
+    for i in 1..=s.len() {
+        // Iterate over potential ending indices of substrings in reverse order
+        // This avoids redundant checks and leverages previous results
+        for j in (0..i).rev().take(longest_word) {
+            // Check if substring can be formed from previous valid substring and a word in the dictionary
+            if dp[j] && word_set.contains(&s[j..i]) {
+                // Substring can be formed, mark it as valid and break to next length
+                dp[i] = true;
+                break;
+            }
+        }
+    }
+    // Final element of dp tells if entire string can be formed
+    dp[s.len()]
+}
+
+// Recursive solution
+pub fn leetcode_139_recursive(s: String, word_dict: Vec<String>) -> bool {
+    fn word_break_recursive(s: &str, dict: &HashSet<String>, idx: usize) -> bool {
+        if idx == s.len() {
+            return true; // Reached the end, valid word break
+        }
+        for word in dict {
+            if s.get(idx..idx + word.len()) == Some(word) {
+                // Check if remaining substring can be broken as well
+                if word_break_recursive(s, dict, idx + word.len()) {
+                    return true;
+                }
+            }
+        }
+        false // No valid word break found starting at `idx`
+    }
+
+    let word_set: HashSet<String> = word_dict.into_iter().collect();
+
+    word_break_recursive(&s, &word_set, 0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    macro_rules! vec_of_strings {
+        ($($x:expr),*) => (vec![$($x.to_string()),*]);
+    }
+
+    #[test]
+    fn test_leetcode_139() {
+        let result = leetcode_139("leetcode".to_string(), vec_of_strings!["leet", "code"]);
+        assert!(result);
+        let result = leetcode_139("applepenapple".to_string(), vec_of_strings!["apple", "pen"]);
+        assert!(result);
+        let result = leetcode_139("catsandog".to_string(), vec_of_strings!["cats","dog","sand","and","cat"]);
+        assert!(!result);
+    }
 
     #[test]
     fn test_leetcode_5() {
