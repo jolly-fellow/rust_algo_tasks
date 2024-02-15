@@ -752,6 +752,12 @@ mod tests {
         assert!(result);
         let result = leetcode_139("catsandog".to_string(), vec_of_strings!["cats","dog","sand","and","cat"]);
         assert!(!result);
+        let result = leetcode_139_recursive("leetcode".to_string(), vec_of_strings!["leet", "code"]);
+        assert!(result);
+        let result = leetcode_139_recursive("applepenapple".to_string(), vec_of_strings!["apple", "pen"]);
+        assert!(result);
+        let result = leetcode_139_recursive("catsandog".to_string(), vec_of_strings!["cats","dog","sand","and","cat"]);
+        assert!(!result);
     }
 
     #[test]
