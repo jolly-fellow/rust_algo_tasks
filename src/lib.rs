@@ -736,12 +736,74 @@ pub fn leetcode_139_recursive(s: String, word_dict: Vec<String>) -> bool {
     word_break_recursive(&s, &word_set, 0)
 }
 
+// https://leetcode.com/problems/longest-palindromic-subsequence
+// 516. Longest Palindromic Subsequence
+pub fn leetcode_516_recursive(s: String) -> i32 {
+    // Simple recursive solution
+    fn r(s: &Vec<char>, b: isize, e: isize) -> i32 {
+
+        if b == e { 1 }
+        else if b > e { 0 }
+        else if s[b as usize] == s[e as usize] {
+            2 + r(s, b+1, e-1)
+        } else {
+            max(r(s, b+1, e), r(s, b, e-1))
+        }
+    }
+    r(&s.chars().collect(), 0, s.len() as isize - 1)
+}
+
+// Dynamic programming solution
+pub fn leetcode_516_dp(s: String) -> i32 {
+    let n = s.len();
+    let s_chars: Vec<char> = s.chars().collect();
+    let mut dp = vec![vec![0; n]; n];
+
+    // Initialize diagonal elements because one symbol length
+    // sequence is always a palindrome
+    for i in 0..n {
+        dp[i][i] = 1;
+    }
+
+    for len in 2..=n {
+        for i in 0..=n - len {
+            let j = i + len - 1;
+            if s_chars[i] == s_chars[j] {
+                dp[i][j] = dp[i + 1][j - 1] + 2;
+            } else {
+                dp[i][j] = dp[i + 1][j].max(dp[i][j - 1]);
+            }
+        }
+    }
+    dp[0][n - 1]
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     macro_rules! vec_of_strings {
         ($($x:expr),*) => (vec![$($x.to_string()),*]);
+    }
+/*
+    #[test]
+    fn test_leetcode_() {
+        let result = leetcode_();
+        assert!(result);
+    }
+*/
+
+    #[test]
+    fn test_leetcode_516() {
+        let result = leetcode_516_recursive("bbbab".to_string());
+        assert!(result == 4);
+        let result = leetcode_516_recursive("cbbd".to_string());
+        assert!(result == 2);
+        let result = leetcode_516_dp("bbbab".to_string());
+        assert!(result == 4);
+        let result = leetcode_516_dp("cbbd".to_string());
+        assert!(result == 2);
     }
 
     #[test]
