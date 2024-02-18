@@ -778,6 +778,89 @@ pub fn leetcode_516_dp(s: String) -> i32 {
     dp[0][n - 1]
 }
 
+// https://leetcode.com/problems/edit-distance/
+// 72. Edit Distance
+pub fn leetcode_72(s1: String, s2: String) -> usize {
+    let m = s1.len();
+    let n = s2.len();
+
+    if m == 0 {
+        return n;
+    }
+    if n == 0 {
+        return m;
+    }
+
+    let mut dp: Vec<Vec<usize>> = vec![vec![0; n + 1]; m + 1];
+
+    for i in 1..=m {
+        dp[i][0] = i;
+    }
+    for j in 1..=n {
+        dp[0][j] = j;
+    }
+
+    for i in 1..=m {
+        for j in 1..=n {
+            if s1.chars().nth(i - 1) == s2.chars().nth(j - 1) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = usize::min(
+                    dp[i - 1][j - 1] + 1,
+                    usize::min(dp[i][j - 1] + 1, dp[i - 1][j] + 1),
+                );
+            }
+        }
+    }
+    dp[m][n]
+}
+
+// Used dp array instead of dp matrix.
+// Speed of work with chars by index was improved
+pub fn leetcode_72_opt(s1: String, s2: String) -> i32 {
+    let m = s1.len();
+    let n = s2.len();
+
+    // Early return for empty strings
+    if m == 0 {
+        return n as i32;
+    }
+    if n == 0 {
+        return m as i32;
+    }
+
+    // Use slices to avoid copying strings
+    let s1_bytes = s1.as_bytes();
+    let s2_bytes = s2.as_bytes();
+
+    // Pre-allocate array for intermediate results
+    let mut costs = vec![0; n + 1];
+
+    // Initialize the first row
+    for j in 1..=n {
+        costs[j] = j;
+    }
+
+    // Iterate through the remaining rows
+    for i in 1..=m {
+        let mut prev = costs[0];
+        costs[0] = i;
+
+        for j in 1..=n {
+            let cost = if s1_bytes[i - 1] == s2_bytes[j - 1] {
+                prev
+            } else {
+                usize::min(prev + 1, usize::min(costs[j] + 1, costs[j - 1] + 1))
+            };
+            prev = costs[j];
+            costs[j] = cost;
+        }
+    }
+    costs[n] as i32
+}
+
+
+
 
 #[cfg(test)]
 mod tests {
@@ -793,7 +876,18 @@ mod tests {
         assert!(result);
     }
 */
+    #[test]
+    fn test_leetcode_72() {
+        let result = leetcode_72("horse".to_string(),  "ros".to_string());
+        assert_eq!(result, 3);
+        let result = leetcode_72("intention".to_string(),  "execution".to_string());
+        assert!(result == 5);
+        let result = leetcode_72_opt("horse".to_string(),  "ros".to_string());
+        assert_eq!(result, 3);
+        let result = leetcode_72_opt("intention".to_string(),  "execution".to_string());
+        assert!(result == 5);
 
+    }
     #[test]
     fn test_leetcode_516() {
         let result = leetcode_516_recursive("bbbab".to_string());
