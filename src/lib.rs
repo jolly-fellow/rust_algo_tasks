@@ -860,6 +860,121 @@ pub fn leetcode_72_opt(s1: String, s2: String) -> i32 {
 }
 
 
+// https://leetcode.com/problems/minimum-ascii-delete-sum-for-two-strings
+// 712. Minimum ASCII Delete Sum for Two Strings
+// Recursive solution
+/*
+pub fn leetcode_712(s1: String, s2: String) -> i32 {
+    fn r(s1: &[u8], i1: usize, s2: &[u8], i2: usize) -> isize {
+        let s1_end = i1 == s1.len();
+        let s2_end = i2 == s2.len();
+
+        if s1_end || s2_end {
+            return if s1_end {
+                s2.iter().skip(i2).map(|&c| c as isize).sum()
+            }
+            else {
+                s1.iter().skip(i1).map(|&c| c as isize).sum()
+            }
+        }
+
+        if s1[i1] == s2[i2] {
+            r(s1, i1+1, s2, i2+1)
+        }
+        else {
+            min(r(s1, i1+1, s2, i2) + s1[i1] as isize,
+                r(s1, i1, s2, i2+1) + s2[i2] as isize)
+        }
+    }
+    r(s1.as_bytes(), 0, s2.as_bytes(), 0) as i32
+}
+*/
+
+// Recursive solution with memoization in a matrix
+// it is a good example which shows that the dynamic programming is
+// just a kind of memoization. The matrix may be changed to a classic hash table but it will
+// works slower
+
+pub fn leetcode_712(s1: String, s2: String) -> i32 {
+    fn r(s1: &[u8], i1: usize, s2: &[u8], i2: usize, matrix: & mut Vec<Vec<isize>>) -> isize {
+        let s1_end = i1 == s1.len();
+        let s2_end = i2 == s2.len();
+
+        if s1_end || s2_end {
+            return if s1_end {
+                s2.iter().skip(i2).map(|&c| c as isize).sum()
+            }
+            else {
+                s1.iter().skip(i1).map(|&c| c as isize).sum()
+            }
+        }
+
+        if matrix[i1][i2] != -1 { return matrix[i1][i2]; }
+
+        let sum = if s1[i1] == s2[i2] {
+            r(s1, i1+1, s2, i2+1, matrix)
+        }
+        else {
+            min(r(s1, i1+1, s2, i2, matrix) + s1[i1] as isize,
+                r(s1, i1, s2, i2+1, matrix) + s2[i2] as isize)
+        };
+        matrix[i1][i2] = sum;
+        sum
+    }
+    let mut matrix: Vec<Vec<isize>> = vec![vec![-1; s2.len() + 1]; s1.len() + 1];
+    r(s1.as_bytes(), 0, s2.as_bytes(), 0, & mut matrix) as i32
+}
+
+// Real DP solution
+pub fn leetcode_712_dp(s1: String, s2: String) -> i32 {
+    let s1_len = s1.len();
+    let s2_len = s2.len();
+    let b1 = s1.as_bytes();
+    let b2 = s2.as_bytes();
+    let mut m: Vec<Vec<i32>> = vec![vec![0; s2_len + 1]; s1_len + 1];
+
+    for j in 1..=s2_len {
+        m[0][j] = m[0][j - 1] + b2[j - 1] as i32;
+    }
+
+    for i in 1..=s1_len {
+        m[i][0] = m[i - 1][0] + b1[i - 1] as i32;
+        for j in 1..=s2_len {
+            if b1[i - 1] == b2[j - 1] {
+                m[i][j] = m[i - 1][j - 1];
+            } else {
+                m[i][j] = i32::min(m[i - 1][j] + b1[i - 1] as i32,
+                                   m[i][j - 1] + b2[j - 1] as i32);
+            }
+        }
+    }
+    m[s1_len][s2_len]
+}
+
+// Used array instead of the matrix
+pub fn leetcode_712_dp_opt(s1: String, s2: String) -> i32 {
+    let s1_len = s1.len();
+    let s2_len = s2.len();
+    let b1 = s1.as_bytes();
+    let b2 = s2.as_bytes();
+    let mut dp: Vec<i32> = vec![0; s2_len + 1];
+
+    for j in 1..=s2_len {
+        dp[j] = dp[j - 1] + b2[j - 1] as i32;
+    }
+
+    for i in 1..=s1_len {
+        let mut tmp1 = dp[0];
+        dp[0] += b1[i-1] as i32;
+
+        for j in 1..=s2_len {
+            let tmp2 = dp[j];
+            dp[j] = if b1[i-1] == b2[j-1] { tmp1 } else { min(dp[j]+b1[i-1]as i32,dp[j-1]+b2[j-1]as i32) };
+            tmp1 = tmp2;
+        }
+    }
+    dp[s2_len]
+}
 
 
 #[cfg(test)]
@@ -876,6 +991,23 @@ mod tests {
         assert!(result);
     }
 */
+
+    #[test]
+    fn test_leetcode_712() {
+        let result = leetcode_712("sea".to_string(), "eat".to_string());
+        assert_eq!(result, 231);
+        let result = leetcode_712("delete".to_string(), "leet".to_string());
+        assert_eq!(result, 403);
+        let result = leetcode_712_dp("sea".to_string(), "eat".to_string());
+        assert_eq!(result, 231);
+        let result = leetcode_712_dp("delete".to_string(), "leet".to_string());
+        assert_eq!(result, 403);
+        let result = leetcode_712_dp_opt("sea".to_string(), "eat".to_string());
+        assert_eq!(result, 231);
+        let result = leetcode_712_dp_opt("delete".to_string(), "leet".to_string());
+        assert_eq!(result, 403);
+    }
+
     #[test]
     fn test_leetcode_72() {
         let result = leetcode_72("horse".to_string(),  "ros".to_string());
