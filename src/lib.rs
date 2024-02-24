@@ -976,6 +976,148 @@ pub fn leetcode_712_dp_opt(s1: String, s2: String) -> i32 {
     dp[s2_len]
 }
 
+// https://leetcode.com/problems/distinct-subsequences/description/
+// 115. Distinct Subsequences
+pub fn leetcode_115(s: &str, t: &str) -> i32 {
+    // This function counts the number of subsequences of the string `s` that are also subsequences of the string `t`.
+    // A subsequence is a string that can be formed by deleting some (but not all) of the characters from another string,
+    // without changing the order of the remaining characters. For example, "abc" is a subsequence of "ahbgdc",
+    // but "acb" is not.
+
+    // Base cases:
+    // If the target string `t` is empty, then any string `s` is a subsequence of it, so we return 1.
+    if t.is_empty() {
+        return 1;
+    }
+    // If the source string `s` is empty, then there are no subsequences of it, so we return 0.
+    if s.is_empty() {
+        return 0;
+    }
+
+    // Handle characters:
+    // Get the first character of each string.
+    let curr_s_char = s.chars().next().unwrap();
+    let curr_t_char = t.chars().next().unwrap();
+
+    // **Include current character only if it matches:**
+    // If the first character of the source string `s` matches the first character of the target string `t`,
+    // then there are two possibilities:
+    // 1. Include the current character in the subsequence. In this case, we recursively call the function with
+    // the remaining characters of both strings (`s[1..]` and `t[1..]`).
+    // 2. Exclude the current character from the subsequence. In this case, we recursively call the function with
+    // the remaining characters of the source string `s[1..]` and the original target string `t`.
+    // We only count the subsequence if the current character matches, so we set `count_with_char` to 0 otherwise.
+    let count_with_char = if curr_s_char == curr_t_char {
+        // Recursively call with both possibilities:
+        leetcode_115(&s[1..], &t[1..]) // Include character
+    } else {
+        0 // Don't include if characters don't match
+    };
+
+    // **Exclude current character (always check the original t!):**
+    // Even if the current character does not match, we still need to consider the possibility of excluding it from the subsequence.
+    // In this case, we recursively call the function with the remaining characters of the source string `s[1..]` and the original target string `t`.
+    let count_without_char = leetcode_115(&s[1..], t);
+
+    // Combine counts:
+    // The total number of subsequences is the sum of the number of subsequences that include the current character
+    // and the number of subsequences that exclude the current character.
+    count_with_char + count_without_char
+}
+
+pub fn leetcode_115_dp(s1: &str, s2: &str) -> i32 {
+    let s = s1.as_bytes(); // source string
+    let t = s2.as_bytes(); // target string
+    let s_len = s.len();
+    let t_len = t.len();
+
+    // Create a 2D dynamic programming table with size (t_len+1) x (s_lenn+1)
+    // This table will store the number of distinct subsequences of `t[0..i-1]` in `s[0..j-1]`
+    let mut dp = vec![vec![0; s_len + 1]; t_len + 1];
+
+    // Base cases:
+    // - An empty string is a subsequence of any string, so initialize the first row to 1.
+    for i in 0..=s_len {
+        dp[0][i] = 1;
+    }
+
+    // Iterate through the dynamic programming table, starting from i = 1 (second character of t)
+    // and j = 1 (second character of s)
+    for i in 1..=t_len {
+        for j in 1..=s_len {
+            // Check if the characters at the current positions match
+            if s[j - 1] == t[i - 1] {
+                // If they match, there are two options:
+                // 1. Include the current character: count = dp[i - 1][j - 1]
+                // (consider subsequence ending at previous characters)
+                // 2. Exclude the current character: count = dp[i][j - 1]
+                // (consider subsequence excluding the previous character)
+                dp[i][j] = dp[i - 1][j - 1] + dp[i][j - 1];
+            } else {
+                // If they don't match, the only option is to exclude the current character:
+                // count = dp[i][j - 1]
+                dp[i][j] = dp[i][j - 1];
+            }
+        }
+    }
+    // The answer is the number of distinct subsequences of `t` in `s`,
+    // located at the bottom right corner of the table
+    dp[t_len][s_len]
+}
+
+// Used an array instead of a matric
+pub fn leetcode_115_dp_opt(s1: &str, s2: &str) -> i32 {
+    let t = s2.as_bytes();
+    let s = s1.as_bytes();
+    let mut dp = vec![0; t.len() + 1];
+
+    // Initialize base cases
+    dp[0] = 1; // Empty string is always a subsequence
+
+    for c in s {
+        for j in (0..t.len()).rev() {
+            let prev = dp[j + 1];
+            dp[j + 1] = if *c == t[j] {
+                dp[j] + prev
+            } else {
+                prev
+            };
+        }
+    }
+    dp[t.len()]
+}
+
+
+// https://leetcode.com/problems/longest-increasing-subsequence
+// 300. Longest Increasing Subsequence
+pub fn leetcode_300_recursive(v: Vec<i32>) -> i32 {
+    fn r(v: &Vec<i32>, i: usize, prev: i32) -> i32 {
+        if i >= v.len() { return 0; }
+        let mut take= 0;
+        // check ways to build the sequence without current element v[i]
+        let dont_take = r(v, i+1, prev);
+        // add the current element v[i] to the sequence if it is greater than the previous one
+        if v[i] > prev { take = 1 + r(v, i+1, v[i]); }
+        // compare which sequence is better with or without the current element
+        max(take, dont_take)
+    }
+    r(&v, 0, i32::MIN)
+}
+
+pub fn leetcode_300_iterative(v: Vec<i32>) -> i32 {
+    let mut dp = vec![1; v.len()];
+    let mut result = 1;
+
+    for i in 0..v.len() {
+        for j in 0..i {
+            if v[i] > v[j] {
+                dp[i] = std::cmp::max(dp[i], dp[j] + 1);
+                result = std::cmp::max(result, dp[i]);
+            }
+        }
+    }
+    result
+}
 
 #[cfg(test)]
 mod tests {
@@ -991,7 +1133,38 @@ mod tests {
         assert!(result);
     }
 */
+    #[test]
+    fn test_leetcode_300() {
+        let result = leetcode_300_recursive(vec![10,9,2,5,3,7,101,18]);
+        assert_eq!(result, 4);
+        let result = leetcode_300_recursive(vec![0,1,0,3,2,3]);
+        assert_eq!(result, 4);
+        let result = leetcode_300_recursive(vec![7,7,7,7,7,7,7]);
+        assert_eq!(result, 1);
+        let result = leetcode_300_iterative(vec![10,9,2,5,3,7,101,18]);
+        assert_eq!(result, 4);
+        let result = leetcode_300_iterative(vec![0,1,0,3,2,3]);
+        assert_eq!(result, 4);
+        let result = leetcode_300_iterative(vec![7,7,7,7,7,7,7]);
+        assert_eq!(result, 1);
+    }
 
+    #[test]
+    fn test_leetcode_115() {
+        let result = leetcode_115("rabbbit", "rabbit");
+        assert_eq!(result, 3);
+        let result = leetcode_115("babgbag", "bag");
+        assert_eq!(result, 5);
+        let result = leetcode_115_dp("rabbbit", "rabbit");
+        assert_eq!(result, 3);
+        let result = leetcode_115_dp("babgbag", "bag");
+        assert_eq!(result, 5);
+        let result = leetcode_115_dp_opt("rabbbit", "rabbit");
+        assert_eq!(result, 3);
+        let result = leetcode_115_dp_opt("babgbag", "bag");
+        assert_eq!(result, 5);
+
+    }
     #[test]
     fn test_leetcode_712() {
         let result = leetcode_712("sea".to_string(), "eat".to_string());
