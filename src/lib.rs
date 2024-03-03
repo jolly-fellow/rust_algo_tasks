@@ -1293,6 +1293,80 @@ pub fn leetcode_354_iterative(envelopes: Vec<Vec<i32>>) -> i32 {
     tails.len() as i32
 }
 
+// 1964. Find the Longest Valid Obstacle Course at Each Position
+// https://leetcode.com/problems/find-the-longest-valid-obstacle-course-at-each-position/
+
+/*
+Algorithm description:
+Certainly, let's break down the algorithm:
+
+1. **Initialize Variables**: We start by initializing three vectors: `dp`, `res`, and `dp_index`.
+`dp` is used to store the longest increasing subsequence found so far. `res` is used to store the
+result for each index, which represents the length of the longest obstacle course for each index.
+`dp_index` is used to keep track of the indices of the elements in the `dp` vector.
+
+2. **Iterate Over Obstacles**: We then iterate over each obstacle in the `obstacles` vector.
+For each obstacle, we perform the following steps:
+
+   a. **Find Upper Bound**: We use a binary search to find the position where the current obstacle
+   should be inserted in the `dp` vector. This is done by calling the `upper_bound` function,
+   which returns the index of the first element in `dp` that is greater than the current obstacle.
+
+   b. **Update `dp` and `dp_index`**: If the upper bound is equal to the current length of `dp`,
+   it means we have found a new, longer increasing subsequence. We append the current obstacle
+   to `dp` and its index to `dp_index`.
+
+   c. **Update `dp` and `dp_index`**: If the upper bound is less than the current length of `dp`,
+   it means we have found a shorter increasing subsequence for the current obstacle.
+   We update the element at the upper bound position in `dp` and its index in `dp_index`.
+
+   d. **Update `res`**: We update the result for the current index in `res`.
+   If the upper bound is equal to the current length of `dp`, it means we have found a new,
+   longer increasing subsequence, so we add 1 to the upper bound to get the length of the longest
+   obstacle course. If the upper bound is less than the current length of `dp`, it means we have
+   found a shorter increasing subsequence, so we use the upper bound as the length of the longest
+   obstacle course.
+
+3. **Return Result**: After iterating over all obstacles, we return the `res` vector, which contains
+the length of the longest obstacle course for each index.
+
+The time complexity of this algorithm is O(n log n) because for each obstacle, we perform a binary
+search in the `dp` vector, which takes O(log n) time. The space complexity is O(n) because we
+use three vectors of size n.
+*/
+
+pub fn leetcode_1964_iterative(obstacles: Vec<i32>) -> Vec<i32> {
+    fn upper_bound(dp: &[i32], left: usize, right: usize, target: i32) -> usize {
+        let mut left = left;
+        let mut right = right;
+
+        while left < right {
+            let mid = left + (right - left) / 2;
+            if dp[mid] <= target {
+                left = mid + 1;
+            } else {
+                right = mid;
+            }
+        }
+        left
+    }
+
+    let n = obstacles.len();
+    let mut dp = vec![0; n];
+    let mut res = vec![0; n];
+    let mut len = 0;
+
+    for i in 0..n {
+        let j = upper_bound(&dp, 0, len, obstacles[i]);
+        if j == len {
+            len += 1;
+        }
+        dp[j] = obstacles[i];
+        res[i] = (j + 1) as i32;
+    }
+    res
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1316,18 +1390,28 @@ mod tests {
             (1..=100_000).map(|i| vec![i, i]).collect()
         }
 
-
         #[test]
         fn test_leetcode_() {
             let result = leetcode_();
             assert_eq!(result, );
         }
     */
+
+    #[test]
+    fn test_leetcode_1964() {
+        let result = leetcode_1964_iterative(vec![1, 2, 3, 2]);
+        assert_eq!(result, vec![1, 2, 3, 3]);
+        let result = leetcode_1964_iterative(vec![2, 2, 1]);
+        assert_eq!(result, vec![1, 2, 1]);
+        let result = leetcode_1964_iterative(vec![3, 1, 5, 6, 4, 2]);
+        assert_eq!(result, vec![1, 1, 2, 3, 2, 2]);
+    }
+
     #[test]
     fn test_leetcode_354() {
-        let result = leetcode_354_iterative(vec![vec![5,4],vec![6,4],vec![6,7],vec![2,3]]);
+        let result = leetcode_354_iterative(vec![vec![5, 4], vec![6, 4], vec![6, 7], vec![2, 3]]);
         assert_eq!(result, 3);
-        let result = leetcode_354_iterative(vec![vec![1,1],vec![1,1],vec![1,1]]);
+        let result = leetcode_354_iterative(vec![vec![1, 1], vec![1, 1], vec![1, 1]]);
         assert_eq!(result, 1);
         let result = leetcode_354_iterative(create_vectors());
         assert_eq!(result, 100000);
