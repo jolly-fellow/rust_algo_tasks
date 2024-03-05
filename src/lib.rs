@@ -1367,6 +1367,167 @@ pub fn leetcode_1964_iterative(obstacles: Vec<i32>) -> Vec<i32> {
     res
 }
 
+// 1143. Longest Common Subsequence
+// https://leetcode.com/problems/longest-common-subsequence/
+
+/*
+ LCS is a problem of finding the longest subsequence common to all sequences in a set of sequences
+ (often just two sequences). A subsequence is a sequence that appears in the same relative order,
+ but not necessarily contiguous.
+
+Here's a step-by-step explanation of the algorithm:
+
+    Initialize a 2D Dynamic Programming Table (DP Table):
+        The DP table is a 2D array where dp[i][j] represents the length of the longest common
+        subsequence for the first i characters of text1 and the first j characters of text2.
+        The table is initialized with zeros, with an extra row and column for the base case
+        (when one of the strings is empty).
+
+    Fill the DP Table:
+        Iterate over each character in text1 and text2.
+        For each pair of characters at indices i and j in text1 and text2, respectively:
+            If the characters are the same (text1[i - 1] == text2[j - 1]), then the current cell
+            dp[i][j] is equal to the cell diagonally above it plus one (dp[i - 1][j - 1] + 1).
+            This represents the common subsequence that includes the current character.
+
+            If the characters are different, then the current cell dp[i][j] is equal to the maximum
+            of the cell to the left (dp[i][j - 1]) and the cell above (dp[i - 1][j]).
+            This represents the maximum length of the common subsequence found so far without
+            the current character.
+
+    Return the Value from the Bottom-Right Cell of the DP Table:
+        The bottom-right cell dp[m][n] of the DP table contains the length of the longest common
+        subsequence of the entire text1 and text2.
+*/
+
+
+pub fn leetcode_1143_iterative(text1: String, text2: String) -> i32 {
+    // Convert the strings to byte slices for efficient memory access
+    let text1: &[u8] = text1.as_bytes();
+    let text2: &[u8] = text2.as_bytes();
+
+    // Get the lengths of the byte slices
+    let (m, n) = (text1.len(), text2.len());
+
+    // Initialize the DP table with an extra row and column for the base case
+    let mut dp = vec![vec![0; n + 1]; m + 1];
+
+    // Fill the DP table
+    for i in 1..=m {
+        for j in 1..=n {
+            // If the current characters are the same, increment the length of the LCS
+            if text1[i - 1] == text2[j - 1] {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                // If the characters are different, take the maximum LCS length so far
+                dp[i][j] = dp[i - 1][j].max(dp[i][j - 1]);
+            }
+        }
+    }
+    // The bottom-right cell contains the length of the LCS for the entire strings
+    // Convert the integer to i32 and return
+    dp[m][n]
+}
+
+// Optimized memory using
+pub fn leetcode_1143_opt(text1: String, text2: String) -> i32 {
+    let text1: &[u8] = text1.as_bytes();
+    let text2: &[u8] = text2.as_bytes();
+    let mut dp = vec![0; text2.len() + 1];
+    let mut prev_dp_val; // Variable to hold the previous diagonal value
+
+    for &c1 in text1 {
+        prev_dp_val = 0; // Reset prev_dp_val for each new character in text1
+        for (j, &c2) in text2.iter().enumerate() {
+            let temp = dp[j + 1]; // Store the current dp[j+1] before it's updated
+            if c1 == c2 {
+                dp[j + 1] = prev_dp_val + 1; // Use prev_dp_val to update dp[j+1]
+            } else {
+                dp[j + 1] = dp[j + 1].max(dp[j]); // Update dp[j+1] based on the max of dp[j+1] and dp[j]
+            }
+            prev_dp_val = temp; // Update prev_dp_val to the value of dp[j+1] before it was updated
+        }
+    }
+    dp[text2.len()]
+}
+
+// 1035. Uncrossed Lines
+// https://leetcode.com/problems/uncrossed-lines
+// The task actually is the same as the previous task because we can draw parallel lines only between
+// numbers in common sequences so solution is the same too:
+
+pub fn leetcode_1035_iterative(nums1: Vec<i32>, nums2: Vec<i32>) -> i32 {
+    let (m, n) = (nums1.len(), nums2.len());
+    let mut dp = vec![vec![0; n + 1]; m + 1];
+
+    for i in 1..=m {
+        for j in 1..=n {
+            if nums1[i - 1] == nums2[j - 1] {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = dp[i - 1][j].max(dp[i][j - 1]);
+            }
+        }
+    }
+    dp[m][n]
+}
+
+// 1312. Minimum Insertion Steps to Make a String Palindrome
+// https://leetcode.com/problems/minimum-insertion-steps-to-make-a-string-palindrome/
+/*
+This function uses dynamic programming to find the length of the longest palindromic subsequence
+(LPS) of the given string `s`. The LPS is the longest subsequence of the string that is also a palindrome.
+By finding the LPS, we can determine the minimum number of characters that need to be inserted to
+make the string a palindrome. The minimum number of insertions is the length of the string minus the length of the LPS.
+
+The function first initializes a 2D DP table `dp` with all elements set to `0`. It then fills in the
+DP table by considering all substrings of increasing length starting from length `2` up to the entire
+string `s`. For each substring, it checks if the characters at the start and end are the same. If they
+are, it means we can include both of them in the LPS, and the length is `2` plus the length of the LPS
+in the middle substring `s[(i+1)..=(j-1)]`. If the characters are not the same, we take the maximum length
+of the LPS we can get by excluding either the first or the last character.
+
+Finally, the function returns the difference between the length of the string `s` and the length of the
+LPS for the entire string `s[0..=(n-1)]`, which represents the minimum number of characters that need
+to be inserted to make `s` a palindrome.
+*/
+pub fn leetcode_1312_iterative(s: String) -> i32 {
+    // Convert the input string `s` into a byte array `&[u8]`.
+    // This is done to avoid creating a new vector of characters, which can be memory-intensive.
+    let s: &[u8] = s.as_bytes();
+    // Get the length of the string `s`.
+    let n = s.len();
+    // Initialize a 2D dynamic programming (DP) table `dp` with dimensions `n x n`.
+    // Each element `dp[i][j]` in the DP table will represent the length of the longest
+    // palindromic subsequence (LPS) in the substring `s[i..=j]`.
+    let mut dp = vec![vec![0; n]; n];
+    // Initialize the DP table for single character substrings.
+    // A single character is always a palindrome of length `1`.
+    for i in 0..n {
+        dp[i][i] = 1;
+    }
+    // Fill the DP table for substrings of length 2 to n.
+    for len in 2..=n {
+        for i in 0..=(n - len) {
+            let j = i + len - 1;
+            // If the characters at the start and end of the substring `s[i]` and `s[j]` are the same,
+            // then the length of the LPS in `s[i..=j]` is `2` plus the length of the LPS in the
+            // substring `s[(i+1)..=(j-1)]`.
+            if s[i] == s[j] {
+                dp[i][j] = 2 + dp[i + 1][j - 1];
+            } else {
+                // If the characters are not the same, then the length of the LPS in `s[i..=j]` is
+                // the maximum of the LPS in the substring `s[(i+1)..=j]` and the LPS in the
+                // substring `s[i..=(j-1)]`.
+                dp[i][j] = dp[i + 1][j].max(dp[i][j - 1]);
+            }
+        }
+    }
+    // The minimum number of insertions is the difference between the length of `s` and the length
+    // of the LPS for the entire string `s[0..=(n-1)]`, which is `dp[0][n-1]`.
+    (n - dp[0][n - 1]) as i32
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1396,6 +1557,43 @@ mod tests {
             assert_eq!(result, );
         }
     */
+
+    #[test]
+    fn test_leetcode_1312() {
+        let result = leetcode_1312_iterative("zzazz".to_string());
+        assert_eq!(result, 0);
+        let result = leetcode_1312_iterative("mbadm".to_string());
+        assert_eq!(result, 2);
+        let result = leetcode_1312_iterative("leetcode".to_string());
+        assert_eq!(result, 5);
+    }
+
+    #[test]
+    fn test_leetcode_1035() {
+        let result = leetcode_1035_iterative(vec![1,3,7,1,7,5], vec![1,9,2,5,1]);
+        assert_eq!(result, 2);
+        let result = leetcode_1035_iterative(vec![1,4,2], vec![1,2,4]);
+        assert_eq!(result, 2);
+        let result = leetcode_1035_iterative(vec![2,5,1,2,5], vec![10,5,2,1,5,2]);
+        assert_eq!(result, 3);
+    }
+
+    #[test]
+    fn test_leetcode_1143() {
+        let result = leetcode_1143_iterative("abcde".to_string(), "ace".to_string());
+        assert_eq!(result, 3);
+        let result = leetcode_1143_iterative("abc".to_string(), "abc".to_string());
+        assert_eq!(result, 3);
+        let result = leetcode_1143_iterative("abc".to_string(), "def".to_string());
+        assert_eq!(result, 0);
+        let result = leetcode_1143_opt("abcde".to_string(), "ace".to_string());
+        assert_eq!(result, 3);
+        let result = leetcode_1143_opt("abc".to_string(), "abc".to_string());
+        assert_eq!(result, 3);
+        let result = leetcode_1143_opt("abc".to_string(), "def".to_string());
+        assert_eq!(result, 0);
+    }
+
 
     #[test]
     fn test_leetcode_1964() {
