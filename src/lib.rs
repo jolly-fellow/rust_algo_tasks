@@ -1528,6 +1528,147 @@ pub fn leetcode_1312_iterative(s: String) -> i32 {
     (n - dp[0][n - 1]) as i32
 }
 
+
+// 309. Best Time to Buy and Sell Stock with Cooldown
+// https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/
+/*
+Classic Dynamic Programming approach.
+The idea is to keep track of the maximum profit that can be achieved at each step, considering the
+current state of the stock (owned or not owned), the number of transactions made, and the day of the
+trading.
+
+Here's a detailed description of the algorithm:
+
+    Initialize a 3D array dp where dp[i][j][k] represents the maximum profit that can be achieved
+    on the i-th day with j transactions and k stocks in hand (k is either 0 or 1).
+
+    Set the base cases:
+        dp[0][0][0] = 0: No profit on the first day with 0 transactions and no stocks in hand.
+        dp[0][0][1] = -prices[0]: Buying the stock on the first day will result in a loss of the
+        price of the stock.
+
+    Iterate over the days of trading (from 1 to n), and for each day, iterate over the number of
+    transactions allowed (from 0 to 2).
+
+    For each day and transaction count, update the maximum profit considering two scenarios:
+
+        If we don't have a stock on the current day (k = 0), we can either do nothing
+        (dp[i-1][j][0]) or sell the stock we have (dp[i-1][j-1][1] + prices[i-1]).
+        If we have a stock on the current day (k = 1), we can either do nothing
+        (dp[i-1][j][1]) or buy a stock (dp[i-2][j][0] - prices[i-1]).
+        Note that we can't buy a stock on the same day we sold a stock, so we use
+        dp[i-2][j][0] to account for the cooldown period.
+
+    After filling the dp array, return the maximum profit that can be achieved with at most 2
+    transactions and no stocks in hand on the last day (dp[n][2][0]).
+ */
+pub fn leetcode_309_iterative(prices: Vec<i32>) -> i32 {
+    let n = prices.len();
+    // Initialize the dp array with zeros
+    let mut dp = vec![vec![vec![0; 2]; 3]; n + 1];
+    // Set the base cases
+    dp[0][0][1] = i32::MIN; // Impossible to have a stock on day 0
+    dp[0][1][1] = i32::MIN; // Impossible to have a stock on day 0
+    dp[0][2][1] = i32::MIN; // Impossible to have a stock on day 0
+
+    // Iterate over the days
+    for i in 1..=n {
+        // Iterate over the number of transactions allowed
+        for j in 0..=2 {
+            // If we don't have a stock on the current day
+            dp[i][j][0] = dp[i-1][j][0]; // Do nothing
+            if j > 0 {
+                // Sell the stock we have
+                dp[i][j][0] = dp[i][j][0].max(dp[i-1][j-1][1] + prices[i-1]);
+            }
+            // If we have a stock on the current day
+            dp[i][j][1] = dp[i-1][j][1]; // Do nothing
+            if i > 1 {
+                // Buy a stock (with cooldown)
+                dp[i][j][1] = dp[i][j][1].max(dp[i-2][j][0] - prices[i-1]);
+            } else {
+                // First day, we can only buy a stock
+                dp[i][j][1] = dp[i][j][1].max(-prices[i-1]);
+            }
+        }
+    }
+    // Return the maximum profit with at most 2 transactions and no stocks in hand on the last day
+    dp[n][2][0]
+}
+/*
+Optimized version. It uses a more space-efficient approach by only keeping track of two arrays
+(buy and sell) instead of a 3D array. This reduces the space complexity from O(n) to O(1),
+which can be beneficial when dealing with large inputs.
+
+Algorithm Description
+
+The algorithm is designed to find the maximum profit that can be achieved by buying and selling a
+stock with a cooldown period. The cooldown period means that after selling a stock, you cannot buy
+stock on the next day. The algorithm uses dynamic programming to keep track of the maximum profit
+that can be achieved at each step.
+
+Here's a step-by-step description of the algorithm:
+
+    Initialize two arrays, buy and sell, with the same length as the prices array. These arrays will
+    store the maximum profit that can be achieved at each step.
+
+    Set the base cases for the buy and sell arrays. The buy array is initialized with the negative
+    of the first price since buying stock on the first day will result in a loss. The sell array is
+    initialized with 0 because no profit can be made on the first day.
+
+    Iterate through the prices array starting from the second day (index 1). For each day, update
+    the buy and sell arrays as follows:
+
+        To calculate the maximum profit if we buy a stock on the i-th day, we consider two options:
+
+            We don't buy a stock on the i-th day, so the profit is the same as the previous day
+            (buy[i - 1]).
+
+            We sell a stock on the day before the i-th day (sell[i - 2]) and then buy a stock
+            on the i-th day, which results in a loss of prices[i].
+
+            We choose the maximum of these two options.
+
+        To calculate the maximum profit if we sell a stock on the i-th day, we consider two options:
+
+            We don't sell a stock on the i-th day, so the profit is the same as the previous day
+            (sell[i - 1]).
+
+            We buy a stock on the i-th day (buy[i - 1]) and then sell it on the i-th day, which
+            results in a gain of prices[i].
+
+            We choose the maximum of these two options.
+
+    After iterating through all the days, the maximum profit is stored in sell[n - 1],
+    where n is the number of days.
+*/
+pub fn leetcode_309_opt(prices: Vec<i32>) -> i32 {
+    let n = prices.len();
+    if n < 2 {
+        return 0; // If there's no price data or only one day, no profit can be made.
+    }
+
+    // Initialize two arrays to keep track of the maximum profit.
+    let mut buy = vec![0; n];
+    let mut sell = vec![0; n];
+
+    // Base cases for the first two days.
+    buy[0] = -prices[0]; // Buying stock on the first day.
+    buy[1] = std::cmp::max(-prices[0], -prices[1]); // Buying stock on the second day.
+    sell[1] = std::cmp::max(0, prices[1] - prices[0]); // Selling stock on the second day.
+
+    // Iterate through the rest of the days.
+    for i in 2..n {
+        // Update the maximum profit if we buy a stock on the i-th day.
+        buy[i] = std::cmp::max(buy[i - 1], sell[i - 2] - prices[i]);
+        // Update the maximum profit if we sell a stock on the i-th day.
+        sell[i] = std::cmp::max(sell[i - 1], buy[i - 1] + prices[i]);
+    }
+    // The maximum profit is in the last element of the sell array.
+    sell[n - 1]
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1557,6 +1698,18 @@ mod tests {
             assert_eq!(result, );
         }
     */
+
+    #[test]
+    fn test_leetcode_309() {
+        let result = leetcode_309_iterative(vec![1,2,3,0,2]);
+        assert_eq!(result, 3);
+        let result = leetcode_309_iterative(vec![1]);
+        assert_eq!(result, 0);
+        let result = leetcode_309_opt(vec![1,2,3,0,2]);
+        assert_eq!(result, 3);
+        let result = leetcode_309_opt(vec![1]);
+        assert_eq!(result, 0);
+    }
 
     #[test]
     fn test_leetcode_1312() {
