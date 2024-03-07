@@ -1668,6 +1668,65 @@ pub fn leetcode_309_opt(prices: Vec<i32>) -> i32 {
     sell[n - 1]
 }
 
+// 714. Best Time to Buy and Sell Stock with Transaction Fee
+// https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-transaction-fee
+/*
+The problem is about maximizing the profit from buying and selling stocks, with a transaction fee
+that is incurred on each transaction. We can make as many transactions as we want, but we have to
+pay the fee for each one.
+
+The algorithm uses dynamic programming to keep track of two states:
+
+1. `sell`: The maximum profit we can make if we're not holding any stock.
+2. `buy`: The maximum profit we can make if we're currently holding a stock.
+
+Initially, we start with `sell = 0` because we haven't made any profit yet, and `buy = -prices[0]`
+because we're buying the first stock, so our profit (or loss) is the negative of the price of the
+first stock.
+
+Now, for each day starting from the second day, we update `sell` and `buy` as follows:
+
+- If we decide to sell the stock today, we would have made a profit equal to the price of the stock
+on that day, minus the transaction fee. But we can only sell if we had bought the stock before, so
+we add the `buy` state to this profit. We then compare this with the current `sell` state to see if
+selling today would be more profitable than not selling.
+
+- If we decide to buy the stock today, we would have spent the price of the stock on that day.
+But we can only buy if we sold the stock before, so we subtract the `sell` state from this cost.
+We then compare this with the current `buy` state to see if buying today would be more profitable
+than not buying.
+
+After going through all the days, `sell` will hold the maximum profit we can make, because we can't
+hold a stock after the last day.
+
+This algorithm is efficient because it only requires a single pass through the prices, and it only
+uses a constant amount of space.
+ */
+pub fn leetcode_714(prices: Vec<i32>, fee: i32) -> i32 {
+    // Initialize the maximum profit if we don't have a stock (sell) and the maximum profit if we do have a stock (buy)
+    // We start with 0 profit if we don't have a stock and -prices[0] profit if we buy the first stock
+    let mut sell = 0;
+    let mut buy = -prices[0];
+
+    // Iterate over the prices starting from the second day
+    for &price in prices.iter().skip(1) {
+        // If we decide to sell the stock today, the profit is the previous buy state (buying at the min price)
+        // plus the current price minus the transaction fee
+        sell = sell.max(buy + price - fee);
+        // If we decide to buy the stock today, the profit is the previous sell state (selling at the max price)
+        // minus the current price
+        buy = buy.max(sell - price);
+    }
+    // Return the maximum profit we can make if we end up with no stock
+    sell
+}
+
+// Functional style solution
+pub fn leetcode_714_func(prices: Vec<i32>, fee: i32) -> i32 {
+    prices.iter().fold((0, -prices[0]), |(sell, buy), price| {
+        (sell.max(buy + price - fee), buy.max(sell - price))
+    }).0
+}
 
 #[cfg(test)]
 mod tests {
@@ -1698,6 +1757,19 @@ mod tests {
             assert_eq!(result, );
         }
     */
+
+    #[test]
+    fn test_leetcode_714() {
+        let result = leetcode_714(vec![1,3,2,8,4,9], 2);
+        assert_eq!(result, 8);
+        let result = leetcode_714(vec![1,3,7,5,10,3], 3);
+        assert_eq!(result, 6);
+        let result = leetcode_714_func(vec![1,3,2,8,4,9], 2);
+        assert_eq!(result, 8);
+        let result = leetcode_714_func(vec![1,3,7,5,10,3], 3);
+        assert_eq!(result, 6);
+
+    }
 
     #[test]
     fn test_leetcode_309() {
