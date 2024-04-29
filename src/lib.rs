@@ -19,7 +19,7 @@ pub fn leetcode_1716(n: i32) -> i32 {
 /*
  https://leetcode.com/problems/climbing-stairs
 
-Actually we need to calcolate the Fibonacci sequence because number of
+Actually we need to calculate the Fibonacci sequence because number of
 possible ways to up to the stairs is sum of N+1 stairs and N+2 stairs where N is a number of stairs
 
 n can't be more than 45 amd less than 0
@@ -1728,6 +1728,280 @@ pub fn leetcode_714_func(prices: Vec<i32>, fee: i32) -> i32 {
     }).0
 }
 
+// 96. Unique Binary Search Trees
+// https://leetcode.com/problems/unique-binary-search-trees/
+
+// recursive solution.
+    pub fn leetcode_96_recursive(n: i32) -> i32 {
+        if n <= 1 {
+            return 1;
+        }
+
+        let mut sum = 0;
+        for i in 1..=n {
+            let left = leetcode_96_recursive(i - 1);
+            let right = leetcode_96_recursive(n - i);
+            sum += left * right;
+        }
+        sum
+    }
+
+// Iterative solution
+    pub fn leetcode_96_iterative(n: i32) -> i32 {
+        let mut dp = vec![0; (n + 1) as usize];
+        dp[0] = 1;
+        dp[1] = 1;
+
+        for i in 2..=n {
+            for j in 1..=i {
+                dp[i as usize] += dp[(j - 1) as usize] * dp[(i - j) as usize];
+            }
+        }
+        dp[n as usize]
+    }
+
+// Optimized solution by using the mathematical formula for Catalan numbers,
+// which is the number of unique BSTs for a given number of nodes.
+// The formula for the nth Catalan number is:
+// C(n) = (2n choose n) - (2n choose n+1) = (2n)! / ((n+1)!n!)
+
+pub fn leetcode_96_opt(n: i32) -> i32 {
+    let n = n as u64;
+    let mut result = 1u64;
+    for i in 1..=n {
+        result *= n + i;
+        result /= i;
+    }
+    (result / (n + 1)) as i32
+}
+
+
+// 95. Unique Binary Search Trees II
+// https://leetcode.com/problems/unique-binary-search-trees-ii/
+/*
+The problem is about generating all possible unique binary search trees with n nodes.
+A binary search tree is a binary tree where the value of each node is greater than or equal to
+the values in all the nodes in its left subtree, and less than or equal to the values in all the
+nodes in its right subtree.
+
+The key to solving this problem is to use recursion. We can generate all possible unique binary
+search trees for a given number of nodes by recursively generating all possible unique binary
+search trees for the left and right subtrees, and then combining them together.
+The recursive function takes a start and end value as input, which represents the range of values
+that can be used to generate the binary search tree.
+The recursive function returns a vector of all possible unique binary search trees for the given
+range of values.
+The base case is when the start value is greater than the end value, which means that there are no
+values in the range. In this case, we return a vector with a single None value.
+The recursive function then iterates over all possible values for the root node, and for each value,
+it generates all possible unique binary search trees for the left and right subtrees, and then combines
+them together to form the final result.
+The recursive function uses a loop to iterate over all possible values for the root node, and for each
+value, it generates all possible unique binary search trees for the left and right subtrees, and then
+combines them together to form the final result.
+ */
+
+// Definition for a binary tree node.
+#[derive(Debug, PartialEq, Eq)]
+pub struct TreeNode {
+    pub val: i32,
+    pub left: Option<Rc<RefCell<TreeNode>>>,
+    pub right: Option<Rc<RefCell<TreeNode>>>,
+}
+
+impl TreeNode {
+    #[inline]
+    pub fn new(val: i32) -> Self {
+        TreeNode {
+            val,
+            left: None,
+            right: None,
+        }
+    }
+}
+use std::rc::Rc;
+use std::cell::RefCell;
+pub fn leetcode_95(n: i32) -> Vec<Option<Rc<RefCell<TreeNode>>>> {
+    fn helper(start: i32, end: i32) -> Vec<Option<Rc<RefCell<TreeNode>>>> {
+        if start > end {
+            return vec![None];
+        }
+        if start == end {
+            return vec![Some(Rc::new(RefCell::new(TreeNode::new(start))))];
+        }
+        let mut result = Vec::new();
+        for i in start..=end {
+            let left = helper(start, i - 1);
+            let right = helper(i + 1, end);
+            for l in left.iter() {
+                for r in right.iter() {
+                    let mut node = TreeNode::new(i);
+                    node.left = l.clone();
+                    node.right = r.clone();
+                    result.push(Some(Rc::new(RefCell::new(node))));
+                }
+            }
+        }
+        result
+    }
+    helper(1, n)
+}
+
+
+// 337. House Robber III
+// https://leetcode.com/problems/house-robber-iii/
+/*
+The problem is about finding the maximum amount of money that can be robbed from a binary tree.
+The key to solving this problem is to use dynamic programming to keep track of the maximum amount
+of money that can be robbed from each node in the tree.
+
+The solution involves two helper functions: `dfs`.
+The `dfs` function is a recursive function that calculates the maximum amount of money that can be
+robbed from a given node and its subtree. It returns a tuple of two values: the maximum amount of
+money that can be robbed from the current node and the maximum amount of money that can be robbed
+from the left and right subtrees.
+ */
+
+pub fn leetcode_337(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    fn dfs(node: Option<Rc<RefCell<TreeNode>>>) -> (i32, i32) {
+        match node {
+            None => (0, 0),
+            Some(node) => {
+                let node = node.borrow();
+                let (left_with, left_without) = dfs(node.left.clone());
+                let (right_with, right_without) = dfs(node.right.clone());
+
+                let with_node = node.val + left_without + right_without;
+                let without_node = left_with.max(left_without) + right_with.max(right_without);
+
+                (with_node, without_node)
+            }
+        }
+    }
+
+    let (with_root, without_root) = dfs(root);
+    with_root.max(without_root)
+}
+
+// 124. Binary Tree Maximum Path Sum
+// https://leetcode.com/problems/binary-tree-maximum-path-sum/
+/*
+The problem is about finding the maximum path sum in a binary tree.
+The key to solving this problem is to use dynamic programming to keep track of the maximum path sum
+from each node in the tree.
+
+The solution involves two helper functions: `dfs`.
+The `dfs` function is a recursive function that calculates the maximum path sum from a given node
+and its subtree. It returns the maximum path sum from the current node and the maximum path sum
+from the left and right subtrees.
+ */
+pub fn leetcode_124(root: Option<Rc<RefCell<TreeNode>>>) -> i32 {
+    let mut max_sum = i32::MIN;
+
+    fn dfs(node: Option<Rc<RefCell<TreeNode>>>, max_sum: &mut i32) -> i32 {
+        if let Some(node) = node {
+            let node = node.borrow();
+            let left_gain = max(dfs(node.left.clone(), max_sum), 0);
+            let right_gain = max(dfs(node.right.clone(), max_sum), 0);
+
+            // The price to start a new path where `node` is a highest node
+            let new_path_price = node.val + left_gain + right_gain;
+
+            // Update max_sum if the new path price is greater
+            *max_sum = max(*max_sum, new_path_price);
+
+            // For recursion:
+            // Return the max gain if continue the same path
+            node.val + max(left_gain, right_gain)
+        } else {
+            0
+        }
+    }
+
+    dfs(root, &mut max_sum);
+    max_sum
+}
+
+// 123. Best Time to Buy and Sell Stock III
+// https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii/
+/*
+The problem is about finding the maximum profit that can be made by buying and selling stocks.
+The idea is to find the maximum profit we can make by making one transaction in the first half
+of the array and another transaction in the second half of the array. We can do this by keeping
+track of the maximum profit we can make by selling at each point in the array, and then using this
+information to calculate the maximum profit we can make by buying at each point in the array.
+ */
+pub fn leetcode_123(prices: Vec<i32>) -> i32 {
+    let n = prices.len();
+    if n < 2 {
+        return 0;
+    }
+
+    let mut left_profits = vec![0; n];
+    let mut right_profits = vec![0; n];
+
+    // Calculate the maximum profit we can make by selling at each point in the array
+    let mut min_price = prices[0];
+    for i in 1..n {
+        min_price = min_price.min(prices[i]);
+        left_profits[i] = left_profits[i - 1].max(prices[i] - min_price);
+    }
+
+    // Calculate the maximum profit we can make by buying at each point in the array
+    let mut max_price = prices[n - 1];
+    for i in (0..n - 1).rev() {
+        max_price = max_price.max(prices[i]);
+        right_profits[i] = right_profits[i + 1].max(max_price - prices[i]);
+    }
+
+    // Find the maximum profit we can make by making one transaction in the first half
+    // and another transaction in the second half
+    let mut max_profit = 0;
+    for i in 0..n {
+        max_profit = max_profit.max(left_profits[i] + right_profits[i]);
+    }
+
+    max_profit
+}
+
+// 188. Best Time to Buy and Sell Stock IV
+// https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/
+/*
+The idea is to keep track of the maximum profit we can make by selling at each point in the array,
+and then using this information to calculate the maximum profit we can make by buying at each point
+in the array. However, since we are allowed to complete at most k transactions, we need to modify
+our approach to account for this constraint.
+ */
+pub fn leetcode_188(k: i32, prices: Vec<i32>) -> i32 {
+    let k = k as usize;
+    let n = prices.len();
+    if k == 0 || n < 2 {
+        return 0;
+    }
+
+    // If k is larger than n/2, we can make as many transactions as we want.
+    // So, the problem becomes the same as the problem with unlimited transactions.
+    if k > n / 2 {
+        let mut profit = 0;
+        for i in 1..n {
+            if prices[i] > prices[i - 1] {
+                profit += prices[i] - prices[i - 1];
+            }
+        }
+        return profit;
+    }
+
+    let mut dp = vec![vec![0; n]; k + 1];
+    for i in 1..=k {
+        let mut max_diff = -prices[0];
+        for j in 1..n {
+            dp[i][j] = dp[i][j - 1].max(prices[j] + max_diff);
+            max_diff = max_diff.max(dp[i - 1][j] - prices[j]);
+        }
+    }
+    dp[k][n - 1]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1757,6 +2031,169 @@ mod tests {
             assert_eq!(result, );
         }
     */
+
+    // Corrected create_tree function
+    fn create_tree(values: &[Option<i32>]) -> Option<Rc<RefCell<TreeNode>>> {
+        fn helper(index: usize, values: &[Option<i32>]) -> Option<Rc<RefCell<TreeNode>>> {
+            if index >= values.len() || values[index].is_none() {
+                return None;
+            }
+
+            let mut node = TreeNode::new(values[index].unwrap());
+            node.left = helper(2 * index + 1, values);
+            node.right = helper(2 * index + 2, values);
+
+            Some(Rc::new(RefCell::new(node)))
+        }
+
+        helper(0, values)
+    }
+
+    // Helper function to check if a tree is a valid BST
+    fn is_valid_bst(root: Option<&Rc<RefCell<TreeNode>>>, min: Option<i32>, max: Option<i32>) -> bool {
+        match root {
+            None => true,
+            Some(node) => {
+                let node = node.borrow();
+                let val = node.val;
+                if min.map_or(true, |x| x < val) && max.map_or(true, |x| x > val) {
+                    is_valid_bst(node.left.as_ref(), min, Some(val)) &&
+                        is_valid_bst(node.right.as_ref(), Some(val), max)
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
+    // Helper function to count the number of nodes in a tree
+    fn count_nodes(root: Option<&Rc<RefCell<TreeNode>>>) -> i32 {
+        match root {
+            None => 0,
+            Some(node) => {
+                let node = node.borrow();
+                1 + count_nodes(node.left.as_ref()) + count_nodes(node.right.as_ref())
+            }
+        }
+    }
+
+    #[test]
+    fn test_leetcode_188() {
+        assert_eq!(leetcode_188(2, vec![3, 2, 6, 5, 0, 3]), 7);
+        assert_eq!(leetcode_188(2, vec![2, 4, 1]), 2);
+        assert_eq!(leetcode_188(2, vec![1, 2, 4, 2, 5, 7, 2, 4, 9, 0]), 13);
+        assert_eq!(leetcode_188(1, vec![1, 2, 3, 4, 5]), 4);
+        assert_eq!(leetcode_188(1, vec![7, 6, 4, 3, 1]), 0);
+        assert_eq!(leetcode_188(1, vec![1]), 0);
+    }
+    #[test]
+    fn test_leetcode_123() {
+        assert_eq!(leetcode_123(vec![3, 3, 5, 0, 0, 3, 1, 4]), 6);
+        assert_eq!(leetcode_123(vec![1, 2, 3, 4, 5]), 4);
+        assert_eq!(leetcode_123(vec![7, 6, 4, 3, 1]), 0);
+        assert_eq!(leetcode_123(vec![1]), 0);
+        assert_eq!(leetcode_123(vec![1, 2, 4, 2, 5, 7, 2, 4, 9, 0]), 13);
+    }
+
+    #[test]
+    fn test_leetcode_124() {
+        // Example 1
+        let values = vec![Some(1), Some(2), Some(3)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_124(root), 6);
+
+        // Example 2
+        let values = vec![Some(-10), Some(9), Some(20), None, None, Some(15), Some(7)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_124(root), 42);
+
+
+        let values = vec![Some(-3)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_124(root), -3);
+    }
+
+    #[test]
+    fn test_leetcode_337() {
+        // Example 1
+        let values = vec![Some(3), Some(2), Some(3), None, Some(3), None, Some(1)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_337(root), 7);
+
+        // Example 2
+        let values = vec![Some(3), Some(4), Some(5), Some(1), Some(3), None, Some(1)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_337(root), 9);
+
+        // Additional test cases
+        let values = vec![Some(4), Some(1), Some(2), Some(3)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_337(root), 7);
+
+        let values = vec![Some(2), Some(1), Some(3), None, Some(4)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_337(root), 7);
+
+        let values = vec![Some(3), Some(2), Some(3), None, Some(3), None, Some(1)];
+        let root = create_tree(&values);
+        assert_eq!(leetcode_337(root), 7);
+    }
+
+    #[test]
+    fn test_leetcode_95() {
+        let test_cases = vec![
+            (1, 1),
+            (2, 2),
+            (3, 5),
+            (4, 14),
+            (5, 42),
+            (6, 132),
+            (7, 429),
+            (8, 1430),
+        ];
+
+        for (n, expected_count) in test_cases {
+            let result = leetcode_95(n);
+            // Check the number of generated trees
+            assert_eq!(result.len(), expected_count);
+
+            // Check each tree's validity and node count
+            for tree in result {
+                if let Some(root) = tree {
+                    // Check if the tree is a valid BST
+                    assert!(is_valid_bst(Some(&root), None, None));
+                    // Check the total number of nodes in the tree
+                    assert_eq!(count_nodes(Some(&root)), n);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_leetcode_96() {
+        let result = leetcode_96_opt(1);
+        assert_eq!(result, 1);
+        let result = leetcode_96_opt(3);
+        assert_eq!(result, 5);
+        let result = leetcode_96_opt(5);
+        assert_eq!(result, 42);
+        let result = leetcode_96_opt(19);
+        assert_eq!(result, 1767263190);
+        let result = leetcode_96_iterative(1);
+        assert_eq!(result, 1);
+        let result = leetcode_96_iterative(3);
+        assert_eq!(result, 5);
+        let result = leetcode_96_iterative(5);
+        assert_eq!(result, 42);
+        let result = leetcode_96_iterative(19);
+        assert_eq!(result, 1767263190);
+        let result = leetcode_96_recursive(1);
+        assert_eq!(result, 1);
+        let result = leetcode_96_recursive(3);
+        assert_eq!(result, 5);
+        let result = leetcode_96_recursive(5);
+        assert_eq!(result, 42);
+    }
 
     #[test]
     fn test_leetcode_714() {
