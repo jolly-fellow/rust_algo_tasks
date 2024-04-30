@@ -2002,6 +2002,420 @@ pub fn leetcode_188(k: i32, prices: Vec<i32>) -> i32 {
     dp[k][n - 1]
 }
 
+// 279. Perfect Squares
+// https://leetcode.com/problems/perfect-squares/
+/*
+The problem is about finding the minimum number of perfect squares that sum up to a given number.
+The key to solving this problem is to use dynamic programming to keep track of the minimum number
+of perfect squares needed to sum up to each number from 1 to n.
+ */
+pub fn leetcode_279(n: i32) -> i32 {
+    let n = n as usize; // Convert the input integer to usize for indexing
+    let mut dp = vec![0; n + 1]; // Initialize a vector to hold the minimum number of perfect squares for each sum
+
+    for i in 1..=n { // Iterate over each sum from 1 to n
+        let mut min = i; // Initialize the minimum number of perfect squares needed to be the current sum
+        let mut j = 1; // Start checking perfect squares
+
+        while j * j <= i { // While the square of j is less than or equal to the current sum
+            min = min.min(dp[i - j * j] + 1); // Update the minimum if using the current perfect square results in a smaller count
+            j += 1; // Move to the next perfect square
+        }
+
+        dp[i] = min; // Store the minimum number of perfect squares needed for the current sum
+    }
+
+    dp[n] as i32 // Return the minimum number of perfect squares needed for the input sum as an i32
+}
+
+// 518. Coin Change 2
+// https://leetcode.com/problems/coin-change-2/
+/*
+The idea is to create an array dp where dp[i] represents the number of combinations that make up
+the amount i. We will iterate over each coin denomination and update the dp array accordingly.
+In this code, we first initialize the dp array with a size of amount + 1 and set dp[0] to 1, which
+represents the base case where there is one way to make up amount 0 (using no coins).
+Then, for each coin denomination, we iterate from the coin value up to the target amount.
+For each amount i, we add the number of ways to make up the amount i - coin to dp[i], which
+represents the number of ways to make up the current amount using the current coin.
+Finally, we return dp[amount], which is the number of combinations that make up the target amount.
+This solution has a time complexity of O(n * m), where n is the amount and m is the number of coin
+denominations, and a space complexity of O(n), as we use an array to store the intermediate results.
+ */
+pub fn leetcode_518(amount: i32, coins: Vec<i32>) -> i32 {
+    // Convert the amount to usize for indexing
+    let amount = amount as usize;
+    // Initialize a vector to store the number of combinations for each amount up to the target amount
+    let mut dp = vec![0; amount + 1];
+    // There is one way to make up amount 0 (using no coins)
+    dp[0] = 1;
+
+    // Iterate over each coin denomination
+    for &coin in coins.iter() {
+        // Convert the coin denomination to usize
+        let coin = coin as usize;
+        // Iterate over each amount from the current coin value up to the target amount
+        for i in coin..=amount {
+            // Add the number of ways to make up the amount i - coin to dp[i]
+            // This represents the number of ways to make up the current amount using the current coin
+            dp[i] += dp[i - coin];
+        }
+    }
+
+    // Return the number of combinations that make up the target amount
+    dp[amount]
+}
+
+// 377. Combination Sum IV
+// https://leetcode.com/problems/combination-sum-iv/
+/*
+We will create an array dp where dp[i] will represent the number of combinations that sum up to i.
+We will iterate over each number i from 0 to target and for each i, we will iterate over each number
+in nums. If the current number num is less than or equal to i, we will add the number of
+combinations that sum up to i - num to dp[i].
+ */
+pub fn leetcode_377(nums: Vec<i32>, target: i32) -> i32 {
+    let target = target as usize;
+    let mut dp = vec![0; target + 1];
+    dp[0] = 1; // There is one way to sum up to 0 (using no numbers)
+
+    for i in 1..=target {
+        for &num in nums.iter() {
+            if num as usize <= i {
+                dp[i] += dp[i - num as usize];
+            }
+        }
+    }
+
+    dp[target]
+}
+
+// 474. Ones and Zeroes
+// https://leetcode.com/problems/ones-and-zeroes/
+
+pub fn leetcode_474(strs: Vec<String>, m: i32, n: i32) -> i32 {
+    // Convert m and n to usize for indexing
+    let m = m as usize;
+    let n = n as usize;
+    // Initialize a 2D vector dp with dimensions (m+1) x (n+1) to store the maximum subset size
+    // dp[i][j] will represent the maximum size of the subset with i zeros and j ones
+    let mut dp = vec![vec![0; n + 1]; m + 1];
+
+    // Iterate over each string in the input vector
+    for s in strs {
+        // Count the number of zeros and ones in the current string
+        let zeros = s.chars().filter(|&c| c == '0').count();
+        let ones = s.len() - zeros;
+
+        // Iterate over the possible counts of zeros and ones for the current string
+        // We start from the maximum possible count and work our way down to avoid using the same string multiple times
+        for i in (zeros..=m).rev() {
+            for j in (ones..=n).rev() {
+                // Update the maximum subset size for the current count of zeros and ones
+                // We either include the current string or we don't, and we take the maximum of the two options
+                dp[i][j] = dp[i][j].max(1 + dp[i - zeros][j - ones]);
+            }
+        }
+    }
+
+    // Return the maximum subset size considering all strings with at most m zeros and n ones
+    dp[m][n]
+}
+
+// 2140. Solving Questions With Brainpower
+// https://leetcode.com/problems/solving-questions-with-brainpower/
+/*
+The idea is to use dynamic programming to solve the problem. We create a vector dp with a size of n+1,
+where dp[i] represents the maximum points that can be earned for solving questions from the current index to the end.
+We iterate over the questions in reverse order, starting from the last question. For each question,
+we calculate the maximum points that can be earned if we decide to solve the current question or skip it.
+We update dp[i] with the maximum of dp[i+1] (skipping the current question) and points + dp[i+brainpower+1]
+(solving the current question and earning the points).
+Finally, we return dp[0], which represents the maximum points that can be earned for solving all questions.
+This solution has a time complexity of O(n), where n is the number of questions, and a space complexity of O(n),
+as we use an array to store the intermediate results.
+ */
+pub fn leetcode_2140(questions: Vec<Vec<i32>>) -> i64 {
+    let n = questions.len();
+    // Initialize a vector dp with a size of n+1 to store the maximum points that can be earned
+    // for solving questions from the current index to the end.
+    let mut dp = vec![0; n + 1];
+
+    // Iterate over the questions in reverse order
+    for i in (0..n).rev() {
+        let points = questions[i][0] as i64;
+        let brainpower = questions[i][1] as usize;
+
+        // Calculate the maximum points if we decide to solve the current question or skip it
+        // If solving the current question and skipping the next brainpower questions is better
+        // than skipping the current question, then we solve it.
+        dp[i] = std::cmp::max(
+            dp[i + 1], // Skipping the current question
+            points + if i + brainpower + 1 <= n { dp[i + brainpower + 1] } else { 0 }, // Solving the current question
+        );
+    }
+
+    // Return the maximum points that can be earned by solving questions from the beginning to the end
+    dp[0]
+}
+
+// 322. Coin Change
+// https://leetcode.com/problems/coin-change/
+/*
+We will create an array dp where dp[i] will represent the fewest number of coins needed to make up
+the amount i. We will iterate over each coin denomination and update the dp array accordingly.
+In this code, we first initialize the dp array with a size of amount + 1 and set each element to
+amount + 1, which is a value that is larger than the maximum possible result. We set dp[0] to 0,
+which represents the base case where 0 coins are needed to make up an amount of 0.
+
+Then, for each amount i from 1 to amount, we iterate over each coin denomination. If the current
+coin denomination coin is less than or equal to i, we update dp[i] with the minimum between its
+current value and dp[i - coin] + 1, which represents using the current coin.
+
+Finally, we return dp[amount] if it is less than or equal to amount, otherwise we return -1
+to indicate that the amount cannot be made up by any combination of the coins.
+ */
+pub fn leetcode_322(coins: Vec<i32>, amount: i32) -> i32 {
+    let amount = amount as usize;
+    let mut dp = vec![amount + 1; amount + 1]; // Initialize with a value that is larger than the maximum possible result
+    dp[0] = 0; // Base case: 0 coins needed to make up an amount of 0
+
+    for i in 1..=amount {
+        for &coin in coins.iter() {
+            if coin as usize <= i {
+                dp[i] = dp[i].min(dp[i - coin as usize] + 1);
+            }
+        }
+    }
+
+    if dp[amount] > amount { -1 } else { dp[amount] as i32 }
+}
+
+// 2466. Count Ways To Build Good Strings
+// https://leetcode.com/problems/count-ways-to-build-good-strings/
+/*
+We will create an array dp where dp[i] will represent the number of good strings of length i.
+We will iterate over each length from low to high and update the dp array accordingly.
+
+In this code, we first initialize the dp array with a size of high + 1 and set dp[0] to 1,
+which represents the base case where there is one way to construct a string of length 0.
+
+Then, for each length i from low to high, we check if we can append a '0' zero times or a '1'
+one times to the end of a string. If we can, we add dp[i - zero] or dp[i - one] to dp[i], respectively.
+
+Finally, we calculate the sum of dp[i] for i from low to high, and return the result modulo 1_000_000_007.
+*/
+pub fn leetcode_2466(low: i32, high: i32, zero: i32, one: i32) -> i32 {
+    let low = low as usize;
+    let high = high as usize;
+    let zero = zero as usize;
+    let one = one as usize;
+    let modulo = 1_000_000_007;
+
+    // Initialize a vector dp with a size of high + 1 to store the number of good strings
+    // of length i.
+    let mut dp = vec![0; high + 1];
+    dp[0] = 1; // Base case: there is one way to construct a string of length 0
+
+    // Iterate over each length from low to high
+    for i in 1..=high {
+        // If we can append a '0' zero times to the end of a string,
+        // then we add dp[i - zero] to dp[i].
+        if i >= zero {
+            dp[i] = (dp[i] + dp[i - zero]) % modulo;
+        }
+        // If we can append a '1' one times to the end of a string,
+        // then we add dp[i - one] to dp[i].
+        if i >= one {
+            dp[i] = (dp[i] + dp[i - one]) % modulo;
+        }
+    }
+
+    // Calculate the sum of dp[i] for i from low to high
+    let mut result = 0;
+    for i in low..=high {
+        result = (result + dp[i]) % modulo;
+    }
+
+    result as i32
+}
+
+// 91. Decode Ways
+// https://leetcode.com/problems/decode-ways/
+/*
+We will create an array dp where dp[i] will represent the number of ways to decode the string s
+up to the i-th character. We will iterate over the string and update the dp array accordingly.
+In this code, we first initialize the dp array with a size of n + 1 and set dp[0] to 1, which
+represents the base case where there is one way to decode an empty string.
+
+Then, we iterate over the string s. For each character, we check if it can form a valid decoding
+by itself and if it can be combined with the previous character to form a valid two-digit number.
+If either condition is true, we update dp[i] accordingly.
+
+Finally, we return dp[n], which represents the number of ways to decode the entire string s.
+*/
+
+pub fn leetcode_91(s: String) -> i32 {
+    let s = s.as_bytes();
+    let n = s.len();
+    let mut dp = vec![0; n + 1];
+    dp[0] = 1; // Base case: there is one way to decode an empty string
+
+    // If the first character is not '0', it can form a valid decoding
+    if s[0] != b'0' {
+        dp[1] = 1;
+    }
+
+    // Iterate over the string
+    for i in 2..=n {
+        // If the current character is not '0', it can form a valid decoding
+        if s[i - 1] != b'0' {
+            dp[i] += dp[i - 1];
+        }
+        // If the current and previous characters form a valid two-digit number,
+        // it can also form a valid decoding
+        if s[i - 2] == b'1' || (s[i - 2] == b'2' && s[i - 1] <= b'6') {
+            dp[i] += dp[i - 2];
+        }
+    }
+
+    dp[n]
+}
+
+// 983. Minimum Cost For Tickets
+// https://leetcode.com/problems/minimum-cost-for-tickets/
+// Function to calculate the minimum cost of travel tickets
+/*
+We will create a vector dp of size 366 to store the minimum cost for each day.
+The dp[i] represents the minimum cost for the i-th day.
+We will iterate over each day from 1 to 365 and calculate the minimum cost for each day.
+The cost for each day is calculated as the minimum cost of the previous day plus the cost of the ticket for that day.
+Finally, we return dp[365], which represents the minimum cost for the entire year.
+*/
+pub fn leetcode_983(days: Vec<i32>, costs: Vec<i32>) -> i32 {
+    // Create a HashSet from the given days vector for efficient membership checks
+    let days_set: HashSet<i32> = days.into_iter().collect();
+    // Initialize a vector to store the minimum cost for each day (366 because we are considering 365 days)
+    let mut dp = vec![0; 366];
+
+    // Iterate over each day from 1 to 365
+    for day in 1..=365 {
+        // If the current day is in the travel days, calculate the minimum cost
+        if days_set.contains(&day) {
+            // Calculate the cost for each option: 1-day pass, 7-day pass, or 30-day pass
+            // The cost is the minimum of the current cost (dp[day]) and the cost of the pass plus the cost of traveling up to the day before the pass expires
+            dp[day as usize] = *[
+                dp[(day - 1) as usize] + costs[0], // 1-day pass
+                dp[cmp::max(0, day - 7) as usize] + costs[1], // 7-day pass
+                dp[cmp::max(0, day - 30) as usize] + costs[2], // 30-day pass
+            ]
+                .iter()
+                .min()
+                .unwrap();
+        } else {
+            // If the current day is not in the travel days, the cost stays the same as the previous day
+            dp[day as usize] = dp[(day - 1) as usize];
+        }
+    }
+
+    // Return the minimum cost to travel on the last day (365th day)
+    dp[365]
+}
+
+// 790. Domino and Tromino Tiling
+// https://leetcode.com/problems/tiling-a-rectangle-with-the-fewest-squares/
+/*
+The `num_tilings` function is designed to calculate the number of ways to tile a 2 x n board using
+dominoes and trominoes. The board is divided into n columns, and each column can be covered by one
+of the following three types of tiles:
+
+1. A domino tile, which covers two adjacent columns.
+2. A tromino tile, which covers two adjacent columns and fits into the space between them.
+3. A gap, which does not cover any columns.
+
+The function uses a dynamic programming approach to solve this problem. The key idea is to keep
+track of the number of ways to tile the board with a certain configuration of the last column
+(either filled or a gap) and the second-to-last column (either filled or a gap).
+
+Here's a step-by-step explanation of the algorithm:
+
+1. **Base Cases**: If `n` is 0, 1, or 2, there are `n` ways to tile the board. This is because
+with 0 columns, there is one way (the empty tiling); with 1 column, there is one way
+(a single vertical domino); and with 2 columns, there are two ways (either two vertical
+dominos or a tromino).
+
+2. **Initialization**: For `n` greater than 2, we initialize four variables to keep track of
+the number of ways to tile the board:
+   - `filled_prev`: The number of ways to tile the board with the last column filled.
+   - `gap_prev`: The number of ways to tile the board with the last column as a gap.
+   - `filled_prev2`: The number of ways to tile the board with the second-to-last column filled.
+   - `gap_prev2`: The number of ways to tile the board with the second-to-last column as a gap.
+
+   Initially, `filled_prev` and `gap_prev` are both set to 2 because there are two ways to cover
+   the last column (with a domino or a tromino). `filled_prev2` and `gap_prev2` are both set to 1
+   because there is only one way to cover the second-to-last column (with a domino).
+
+3. **Iteration**: For each column `i` from 3 to `n`, we calculate the number of ways to tile
+the board with the last column filled and the second-to-last column filled, and with the last
+column as a gap and the second-to-last column as a gap.
+
+   - To calculate the number of ways with the last column filled, we consider three scenarios:
+     - The second-to-last column is filled, which means we can add a domino to cover the last column.
+     - The second-to-last column is a gap, which means we can add a tromino to cover the last column.
+     - The board has been tiled with the last two columns as gaps, which means we can add a
+     domino to cover the last column.
+
+   - To calculate the number of ways with the last column as a gap, we consider two scenarios:
+     - The last column is filled, which means we can leave a gap after it.
+     - The second-to-last column is filled, which means we can leave a gap before it.
+
+   We take the modulo with `1_000_000_007` to keep the numbers within the range of a 32-bit integer.
+
+4. **Update**: After calculating the new values for `filled_prev` and `gap_prev`, we update
+`filled_prev2` and `gap_prev2` to be equal to their previous values for the next iteration.
+
+5. **Return**: The function returns the number of ways to tile the board with the last column
+filled, which is `filled_prev`.
+
+The algorithm ensures that at each step, we only consider the last two columns to calculate
+the number of ways to tile the board, which is crucial for handling large values of `n` efficiently.
+*/
+pub fn leetcode_790(n: i32) -> i32 {
+    const MOD: i64 = 1_000_000_007;
+
+    // Base cases for n = 0, 1, 2
+    match n {
+        0 => 0,
+        1 => 1,
+        2 => 2,
+        _ => {
+            // Initialize the previous states with the base cases for n = 2 and n = 3
+            let mut filled_prev = 2;
+            let mut gap_prev = 2;
+            let mut filled_prev2 = 1;
+            let mut gap_prev2 = 1;
+
+            // Iterate from 3 to n (inclusive) to fill the dp table
+            for _ in 3..=n {
+                // Calculate the number of ways to tile when the last column is filled
+                let new_filled = (filled_prev + filled_prev2 + 2 * gap_prev2) % MOD;
+                // Calculate the number of ways to tile when the last column is a gap
+                let new_gap = (filled_prev + gap_prev) % MOD;
+
+                // Update the previous states for the next iteration
+                filled_prev2 = filled_prev;
+                filled_prev = new_filled;
+                gap_prev2 = gap_prev;
+                gap_prev = new_gap;
+            }
+
+            // Return the number of ways to tile a 2 x n board when the last column is filled
+            filled_prev as i32
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2075,6 +2489,121 @@ mod tests {
                 1 + count_nodes(node.left.as_ref()) + count_nodes(node.right.as_ref())
             }
         }
+    }
+
+
+    #[test]
+    fn test_leetcode_790() {
+        assert_eq!(leetcode_790(3), 5);
+        assert_eq!(leetcode_790(1), 1);
+        assert_eq!(leetcode_790(30), 312342182);
+    }
+
+    #[test]
+    fn test_leetcode_983() {
+        let days = vec![1, 4, 6, 7, 8, 20];
+        let costs = vec![2, 7, 15];
+        assert_eq!(leetcode_983(days, costs), 11);
+        let days = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 31];
+        let costs = vec![2, 7, 15];
+        assert_eq!(leetcode_983(days, costs), 17);
+    }
+
+    #[test]
+    fn test_leetcode_91() {
+        let s = "12".to_string();
+        assert_eq!(leetcode_91(s), 2);
+        let s = "226".to_string();
+        assert_eq!(leetcode_91(s), 3);
+        let s = "06".to_string();
+        assert_eq!(leetcode_91(s), 0);
+    }
+
+    #[test]
+    fn test_leetcode_2466() {
+        let low = 3;
+        let high = 3;
+        let zero = 1;
+        let one = 1;
+        assert_eq!(leetcode_2466(low, high, zero, one), 8);
+        let low = 2;
+        let high = 3;
+        let zero = 1;
+        let one = 2;
+        assert_eq!(leetcode_2466(low, high, zero, one), 5);
+    }
+
+    #[test]
+    fn test_leetcode_322() {
+        let coins = vec![1, 2, 5];
+        let amount = 11;
+        assert_eq!(leetcode_322(coins, amount), 3);
+        let coins = vec![2];
+        let amount = 3;
+        assert_eq!(leetcode_322(coins, amount), -1);
+        let coins = vec![1];
+        let amount = 0;
+        assert_eq!(leetcode_322(coins, amount), 0);
+    }
+
+    #[test]
+    fn test_leetcode_2140() {
+        let questions = vec![vec![3, 2], vec![4, 3], vec![4, 4], vec![2, 5]];
+        assert_eq!(leetcode_2140(questions), 5);
+        let questions = vec![vec![1, 1], vec![2, 2], vec![3, 3], vec![4, 4], vec![5, 5]];
+        assert_eq!(leetcode_2140(questions), 7);
+    }
+
+    #[test]
+    fn test_leetcode_474() {
+        let strs = vec_of_strings!["10", "0001", "111001", "1", "0"];
+        let m = 5;
+        let n = 3;
+
+        assert_eq!(leetcode_474(strs, m, n), 4);
+        let strs = vec_of_strings!["10", "0", "1"];
+        let m = 1;
+        let n = 1;
+        assert_eq!(leetcode_474(strs, m, n), 2);
+    }
+
+    #[test]
+    fn test_leetcode_377() {
+        let nums = vec![1, 2, 3];
+        let target = 4;
+        assert_eq!(leetcode_377(nums, target), 7);
+        let nums = vec![9];
+        let target = 3;
+        assert_eq!(leetcode_377(nums, target), 0);
+    }
+
+    #[test]
+    fn test_leetcode_518() {
+        let amount = 5;
+        let coins = vec![1, 2, 5];
+        assert_eq!(leetcode_518(amount, coins), 4);
+        let amount = 3;
+        let coins = vec![2];
+        assert_eq!(leetcode_518(amount, coins), 0);
+        let amount = 10;
+        let coins = vec![10];
+        assert_eq!(leetcode_518(amount, coins), 1);
+    }
+
+    #[test]
+    fn test_leetcode_279() {
+        assert_eq!(leetcode_279(12), 3);
+        assert_eq!(leetcode_279(13), 2);
+        assert_eq!(leetcode_279(1), 1);
+        assert_eq!(leetcode_279(2), 2);
+        assert_eq!(leetcode_279(3), 3);
+        assert_eq!(leetcode_279(4), 1);
+        assert_eq!(leetcode_279(5), 2);
+        assert_eq!(leetcode_279(6), 3);
+        assert_eq!(leetcode_279(7), 4);
+        assert_eq!(leetcode_279(8), 2);
+        assert_eq!(leetcode_279(9), 1);
+        assert_eq!(leetcode_279(10), 2);
     }
 
     #[test]
